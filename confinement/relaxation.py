@@ -70,6 +70,34 @@ class RelaxationSolver:
                 f[:, i, j] = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
                               + f[:, i, j + 1] - h**2 * laplacian[:, i, j]) / 4
 
+    def solve(self, method='jacobi', maxiter=1000):
+        """Solve the PDE.
+
+        Parameters
+        ----------
+        method : str
+            Method of solving. Either 'jacobi' for the Jacobi method or 'gauss'
+            for the Gauss-Siedel method.
+        maxiter : int
+            Maximum number of iterations until halting.
+
+        Returns
+        -------
+        field : Field
+            The solution field.
+        """
+        if method == 'jacobi':
+            update = self.update_jacobi
+        elif method == 'gauss':
+            update = self.update_gauss
+        else:
+            raise ValueError("method must be 'jacobi' or 'gauss'")
+
+        for i in range(maxiter):
+            update()
+
+        return self.field
+
 
 class PoissonSolver(RelaxationSolver):
     """
