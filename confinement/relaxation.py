@@ -18,7 +18,7 @@ class RelaxationSolver:
             The vector field which defines the grid and where the solution will
             ultimately be stored. The solver assumes that the boundary
             conditions for the field have already been set.
-        func : callable(field)
+        func : callable(Field)
             The function which defines the Laplacain of the field. This should
             take as its argument the field, and return a complex-valued array
             of the same shape as field.field which gives the Laplacian at each
@@ -43,12 +43,12 @@ class PoissonSolver(RelaxationSolver):
             The vector field which defines the grid and where the solution will
             ultimately be stored. The solver assumes that the boundary
             conditions for the field have already been set.
-        func : callable(z, y)
+        func : callable(Field)
             The function which defines the Laplacian of the field. This should
-            take coordinates (z, y) and return a vector which gives the value
-            of the Laplacian for each component of the field.
+            take as its argument the field, and return a complex-valued array
+            of the same shape as field.field which gives the Laplacian at each
+            point. It is assumed that func depends only on the y and z grid
+            coordinates, and not on the value of the field.
         """
-        # TODO: Implement super_func
-        super_func = None
-
-        super().__init__(field, super_func)
+        laplacian = func(field)
+        super().__init__(field, lambda f: laplacian)
