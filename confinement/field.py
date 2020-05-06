@@ -19,9 +19,9 @@ class Field:
         zmax
             Rightmost grid point of the domain.
         ymin
-            Bottom grid point of the domain.
+            Lowermost grid point of the domain.
         ymax
-            Top grid point of the domain.
+            Uppermost grid point of the domain.
         gridsize
             Grid division size.
         """
