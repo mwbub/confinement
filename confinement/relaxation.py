@@ -36,17 +36,23 @@ class RelaxationSolver:
 
         Returns
         -------
-        None
+        error : float
+            The current error, defined as the average absolute difference
+            between each component of the new field and the old field.
         """
         # Store the field, grid size, and Laplacian in temporary variables
         f = self.field.field
         h = self.field.gridsize
-        laplacian = self.func(f)
+        laplacian = self.func(self.field)
 
         # Compute the new values of the field using vectorized operations
         f_new = (f[:, :-2, 1:-1] + f[:, 2:, 1:-1] + f[:, 1:-1, :-2]
                  + f[:, 1:-1, 2:] - h**2 * laplacian[:, 1:-1, 1:-1]) / 4
         f[:, 1:-1, 1:-1] = f_new
+
+        # Compute and return the error
+        error = np.sum(np.abs(f - f_new)) / f.size
+        return error
 
     def update_gauss(self):
         """Update the field using the Gauss-Siedel method of relaxation.
@@ -57,20 +63,35 @@ class RelaxationSolver:
 
         Returns
         -------
-        None
+        error : float
+            The current error, defined as the average absolute difference
+            between each component of the new field and the old field.
         """
         # Store the field, grid size, and Laplacian in temporary variables
         f = self.field.field
         h = self.field.gridsize
-        laplacian = self.func(f)
+        laplacian = self.func(self.field)
 
         # Compute the new values of the field using explicit loops
+        error = 0
         for i in range(1, self.field.nz - 1):
             for j in range(1, self.field.ny - 1):
-                f[:, i, j] = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
-                              + f[:, i, j + 1] - h**2 * laplacian[:, i, j]) / 4
 
-    def solve(self, method='jacobi', maxiter=1000):
+                # Compute the new value of f[:, i, j]
+                f_new = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
+                         + f[:, i, j + 1] - h**2 * laplacian[:, i, j]) / 4
+
+                # Increment the error
+                error += np.sum(np.abs(f[:, i, j] - f_new))
+
+                # Update the field
+                f[:, i, j] = f_new
+
+        # Normalize and return the error
+        error /= f.size
+        return error
+
+    def solve(self, method='jacobi', tol=1e-5, maxiter=1000):
         """Solve the PDE.
 
         Parameters
@@ -78,13 +99,17 @@ class RelaxationSolver:
         method : str
             Method of solving. Either 'jacobi' for the Jacobi method or 'gauss'
             for the Gauss-Siedel method.
+        tol : float
+            Error tolerance. The solver will consider the solution to have
+            converged once this threshold is reached.
         maxiter : int
             Maximum number of iterations until halting.
 
         Returns
         -------
-        field : Field
-            The solution field.
+        iterations : int
+            Number of iterations until the solution converged or maxiter was
+            reached.
         """
         if method == 'jacobi':
             update = self.update_jacobi
@@ -93,10 +118,13 @@ class RelaxationSolver:
         else:
             raise ValueError("method must be 'jacobi' or 'gauss'")
 
+        i = 0
         for i in range(maxiter):
-            update()
+            error = update()
+            if error < tol:
+                break
 
-        return self.field
+        return i + 1
 
 
 class PoissonSolver(RelaxationSolver):
