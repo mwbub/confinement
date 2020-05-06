@@ -48,8 +48,6 @@ class PoissonSolver(RelaxationSolver):
             take coordinates (z, y) and return a vector which gives the value
             of the Laplacian for each component of the field.
         """
-        self.field = field
-
         # TODO: Implement super_func
         super_func = None
 
