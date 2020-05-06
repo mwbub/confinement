@@ -48,10 +48,13 @@ class RelaxationSolver:
         # Compute the new values of the field using vectorized operations
         f_new = (f[:, :-2, 1:-1] + f[:, 2:, 1:-1] + f[:, 1:-1, :-2]
                  + f[:, 1:-1, 2:] - h**2 * laplacian[:, 1:-1, 1:-1]) / 4
+
+        # Compute the error
+        error = np.sum(np.abs(f[:, 1:-1, 1:-1] - f_new)) / f.size
+
+        # Update the field
         f[:, 1:-1, 1:-1] = f_new
 
-        # Compute and return the error
-        error = np.sum(np.abs(f - f_new)) / f.size
         return error
 
     def update_gauss(self):
