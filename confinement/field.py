@@ -16,13 +16,13 @@ class Field:
             Number of field components.
         zmin : float
             Leftmost grid point of the domain.
-        zmax
+        zmax : float
             Rightmost grid point of the domain.
-        ymin
+        ymin : float
             Lowermost grid point of the domain.
-        ymax
+        ymax : float
             Uppermost grid point of the domain.
-        gridsize
+        gridsize : float
             Grid division size.
         """
         self.n = n
