@@ -30,7 +30,7 @@ class RelaxationSolver:
     def update_jacobi(self):
         """Update the field using the Jacobi method of relaxation.
 
-        This method converges slower than the Gauss-Siedel method, but can be
+        This method converges slower than the Gauss-Seidel method, but can be
         implemented using vectorized array operations, which may speed up
         the computations.
 
@@ -58,7 +58,7 @@ class RelaxationSolver:
         return error
 
     def update_gauss(self):
-        """Update the field using the Gauss-Siedel method of relaxation.
+        """Update the field using the Gauss-Seidel method of relaxation.
 
         This method converges faster than the Jacobi method, but is implemented
         with explict loops rather than vectorized array operations, which may
@@ -101,7 +101,7 @@ class RelaxationSolver:
         ----------
         method : str
             Method of solving. Either 'jacobi' for the Jacobi method or 'gauss'
-            for the Gauss-Siedel method.
+            for the Gauss-Seidel method.
         tol : float
             Error tolerance. The solver will consider the solution to have
             converged once this threshold is reached.
