@@ -9,7 +9,7 @@ class Superpotential:
     """
 
     def __init__(self, N):
-        """Initialize this superpotential.
+        """Initialize this Superpotential.
 
         Parameters
         ----------
