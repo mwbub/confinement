@@ -189,7 +189,7 @@ class PoissonSolver2D(RelaxationSolver2D):
     """
 
     def __init__(self, field, func):
-        """Initialize this PoissonSolver.
+        """Initialize this PoissonSolver2D.
 
         Parameters
         ----------
