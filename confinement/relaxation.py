@@ -166,7 +166,6 @@ class RelaxationSolver2D(RelaxationSolver):
         error = 0
         for i in range(1, self.field.nz - 1):
             for j in range(1, self.field.ny - 1):
-
                 # Compute the new value of f[:, i, j]
                 f_new = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
                          + f[:, i, j + 1] - h**2 * laplacian[:, i, j]) / 4
@@ -232,10 +231,61 @@ class RelaxationSolver1D(RelaxationSolver):
         """
         super().__init__(field, func)
 
-    # TODO: Implement this
-    def update_gauss(self):
-        raise NotImplementedError
-
-    # TODO: Implement this
     def update_jacobi(self):
-        raise NotImplementedError
+        """Update the field using the Jacobi method of relaxation.
+
+        This method converges slower than the Gauss-Seidel method, but can be
+        implemented using vectorized array operations, which may speed up
+        the computations.
+
+        Returns
+        -------
+        error : float
+            The current error, defined as the average absolute difference
+            between each component of the new field and the old field.
+        """
+        # Store the field, grid size, and 2nd derivative in temporary variables
+        f = self.field.field
+        h = self.field.gridsize
+        deriv = self.func(self.field)
+
+        # Compute the new values of the field using vectorized operations
+        f_new = (f[:, :-2] + f[:, 2:] - h**2 * deriv[:, 1:-1]) / 2
+
+        # Compute the error
+        error = np.sum(np.abs(f[:, 1:-1] - f_new)) / f.size
+
+        # Update the field
+        f[:, 1:-1] = f_new
+
+        return error
+
+    def update_gauss(self):
+        """Update the field using the Gauss-Seidel method of relaxation.
+
+        This method converges faster than the Jacobi method, but is implemented
+        with explict loops rather than vectorized array operations, which may
+        slow down the computations.
+
+        Returns
+        -------
+        error : float
+            The current error, defined as the average absolute difference
+            between each component of the new field and the old field.
+        """
+        # Store the field, grid size, and 2nd derivative in temporary variables
+        f = self.field.field
+        h = self.field.gridsize
+        deriv = self.func(self.field)
+
+        # Compute the new values of the field using explicit loops
+        error = 0
+        for i in range(1, self.field.ny - 1):
+            # Compute the new value of the field and increment the error
+            f_new = (f[:, i - 1] + f[:, i + 1] - h**2 * deriv[:, i]) / 2
+            error += np.sum(np.abs(f[:, i] - f_new))
+            f[:, i] = f_new
+
+        # Normalize and return the error
+        error /= f.size
+        return error
