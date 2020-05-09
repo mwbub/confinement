@@ -38,3 +38,35 @@ class Field:
 
         # Array of shape (n, nz, ny) representing the field
         self.field = np.zeros((self.n, self.nz, self.ny), dtype=complex)
+
+
+class Field1D:
+    """
+    A class used to represent a discretized complex-valued vector field in one
+    spatial dimension.
+    """
+
+    def __init__(self, n, ymin, ymax, gridsize):
+        """
+
+        Parameters
+        ----------
+        n : int
+            Number of field components.
+        ymin : float
+            Lowermost grid point of the domain.
+        ymax : float
+            Uppermost grid point of the domain.
+        gridsize : float
+            Grid division size.
+        """
+        self.n = n
+        self.ymin = ymin
+        self.ymax = ymax
+        self.gridsize = gridsize
+
+        # Number of grid points along each axis
+        self.ny = int((ymax - ymin) / gridsize) + 1
+
+        # Array of shape (n, ny) representing the field
+        self.field = np.zeros((self.n, self.ny), dtype=complex)
