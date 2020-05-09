@@ -8,5 +8,5 @@ setup(
     author='Mathew Bub',
     author_email='mathew.bub@gmail.com',
     description='',
-    install_requires=['numpy', 'scipy']
+    install_requires=['numpy']
 )
