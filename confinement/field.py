@@ -47,7 +47,7 @@ class Field1D:
     """
 
     def __init__(self, n, ymin, ymax, gridsize):
-        """
+        """Initialize this Field1D.
 
         Parameters
         ----------
