@@ -37,8 +37,8 @@ class Superpotential:
         dot_products = _dot_roots_with_field(self.alpha, field.field)
         return np.sum(np.exp(dot_products), axis=0)
 
-    def field_laplacian(self, field):
-        """Compute the Laplacian term on a field due to this Superpotential.
+    def eom(self, field):
+        """Compute the field equation of motion term due to this Superpotential.
 
         Parameters
         ----------
@@ -70,8 +70,8 @@ class Superpotential:
         # Return the potential term of the Laplacian
         return np.sum(summand, axis=0) / 4
 
-    def _field_laplacian_naive(self, field):
-        """Naive implementation of field_laplacian, used for testing purposes.
+    def _eom_naive(self, field):
+        """Naive implementation of eom, used for testing purposes.
 
         Parameters
         ----------
