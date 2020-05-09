@@ -18,6 +18,7 @@ class Field:
         """
         self.n = n
         self.gridsize = gridsize
+        self.field = None
 
 
 class Field2D(Field):

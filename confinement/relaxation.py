@@ -3,13 +3,102 @@ import numpy as np
 
 class RelaxationSolver:
     """
+    Abstract parent class of RelaxationSolver2D and RelaxationSolver1D.
+    """
+
+    def __init__(self, field, func):
+        """Initialize this RelaxationSolver.
+
+        Parameters
+        ----------
+        field : Field
+            The vector field which defines the grid and where the solution will
+            ultimately be stored. The solver assumes that the boundary
+            conditions for the field have already been set.
+        func : callable(Field)
+            The function which defines the Laplacian of the field. This should
+            take as its argument the field, and return a complex-valued array
+            of the same shape as field.field which gives the Laplacian at each
+            point.
+        """
+        self.field = field
+        self.func = func
+
+    def update_jacobi(self):
+        """Update the field using the Jacobi method of relaxation.
+
+        This method converges slower than the Gauss-Seidel method, but can be
+        implemented using vectorized array operations, which may speed up
+        the computations.
+
+        Returns
+        -------
+        error : float
+            The current error, defined as the average absolute difference
+            between each component of the new field and the old field.
+        """
+        raise NotImplementedError
+
+    def update_gauss(self):
+        """Update the field using the Gauss-Seidel method of relaxation.
+
+        This method converges faster than the Jacobi method, but is implemented
+        with explict loops rather than vectorized array operations, which may
+        slow down the computations.
+
+        Returns
+        -------
+        error : float
+            The current error, defined as the average absolute difference
+            between each component of the new field and the old field.
+        """
+        raise NotImplementedError
+
+    def solve(self, method='jacobi', tol=1e-5, maxiter=1000):
+        """Solve the PDE.
+
+        Parameters
+        ----------
+        method : str
+            Method of solving. Either 'jacobi' for the Jacobi method or 'gauss'
+            for the Gauss-Seidel method.
+        tol : float
+            Error tolerance. The solver will consider the solution to have
+            converged once this threshold is reached.
+        maxiter : int
+            Maximum number of iterations until halting.
+
+        Returns
+        -------
+        iterations : int
+            Number of iterations until the solution converged or maxiter was
+            reached.
+        """
+        if method == 'jacobi':
+            update = self.update_jacobi
+        elif method == 'gauss':
+            update = self.update_gauss
+        else:
+            raise ValueError("method must be 'jacobi' or 'gauss'")
+
+        i = 0
+        for i in range(maxiter):
+            error = update()
+            if error < tol:
+                break
+
+        return i + 1
+
+
+class RelaxationSolver2D(RelaxationSolver):
+    """
     A class used to solve a general discretized 2D second-order PDE of the form
     Dz^2 u + Dy^2 u = f(u, z, y), where u is a complex-valued vector field,
     using the relaxation method.
     """
 
     def __init__(self, field, func):
-        """Initialize this RelaxationSolver.
+        """Initialize this RelaxationSolver2D.
 
         Parameters
         ----------
@@ -23,8 +112,7 @@ class RelaxationSolver:
             of the same shape as field.field which gives the Laplacian at each
             point.
         """
-        self.field = field
-        self.func = func
+        super().__init__(field, func)
 
     def update_jacobi(self):
         """Update the field using the Jacobi method of relaxation.
@@ -93,43 +181,8 @@ class RelaxationSolver:
         error /= f.size
         return error
 
-    def solve(self, method='jacobi', tol=1e-5, maxiter=1000):
-        """Solve the PDE.
 
-        Parameters
-        ----------
-        method : str
-            Method of solving. Either 'jacobi' for the Jacobi method or 'gauss'
-            for the Gauss-Seidel method.
-        tol : float
-            Error tolerance. The solver will consider the solution to have
-            converged once this threshold is reached.
-        maxiter : int
-            Maximum number of iterations until halting.
-
-        Returns
-        -------
-        iterations : int
-            Number of iterations until the solution converged or maxiter was
-            reached.
-        """
-        if method == 'jacobi':
-            update = self.update_jacobi
-        elif method == 'gauss':
-            update = self.update_gauss
-        else:
-            raise ValueError("method must be 'jacobi' or 'gauss'")
-
-        i = 0
-        for i in range(maxiter):
-            error = update()
-            if error < tol:
-                break
-
-        return i + 1
-
-
-class PoissonSolver(RelaxationSolver):
+class PoissonSolver2D(RelaxationSolver2D):
     """
     A class used to solve a discretized 2D Poisson problem for a complex-valued
     vector field, using the relaxation method.
@@ -153,3 +206,36 @@ class PoissonSolver(RelaxationSolver):
         """
         laplacian = func(field)
         super().__init__(field, lambda f: laplacian)
+
+
+class RelaxationSolver1D(RelaxationSolver):
+    """
+    A class used to solve a general discretized 1D second-order PDE of the form
+    Dy^2 u = f(u, y), where u is a complex-valued vector field in one variable,
+    using the relaxation method.
+    """
+
+    def __init__(self, field, func):
+        """Initialize this RelaxationSolver1D.
+
+        Parameters
+        ----------
+        field : Field1D
+            The vector field which defines the grid and where the solution will
+            ultimately be stored. The solver assumes that the boundary
+            conditions for the field have already been set.
+        func : callable(Field1D)
+            The function which defines the second derivative of the field. This
+            should take as its argument the field, and return a complex-valued
+            array of the same shape as field.field which gives the second
+            derivative at each point.
+        """
+        super().__init__(field, func)
+
+    # TODO: Implement this
+    def update_gauss(self):
+        raise NotImplementedError
+
+    # TODO: Implement this
+    def update_jacobi(self):
+        raise NotImplementedError
