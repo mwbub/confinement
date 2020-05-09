@@ -28,7 +28,7 @@ class Field2D(Field):
     """
 
     def __init__(self, n, zmin, zmax, ymin, ymax, gridsize):
-        """Initialize this Field.
+        """Initialize this Field2D.
 
         Parameters
         ----------
@@ -73,9 +73,9 @@ class Field1D(Field):
         n : int
             Number of field components.
         ymin : float
-            Lowermost grid point of the domain.
+            Leftmost point of the domain.
         ymax : float
-            Uppermost grid point of the domain.
+            Rightmost point of the domain.
         gridsize : float
             Grid division size.
         """
