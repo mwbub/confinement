@@ -34,7 +34,7 @@ class Superpotential:
             The value of the superpotential at each point. If field.field has
             shape (N-1, nz, ny), then W has shape (nz, ny).
         """
-        dot_products = _dot_roots_with_field(self.alpha, field.field)
+        dot_products = _dot_roots_with_field2d(self.alpha, field.field)
         return np.sum(np.exp(dot_products), axis=0)
 
     def eom(self, field):
@@ -53,7 +53,7 @@ class Superpotential:
             at each point. Has the same shape as field.field.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field(self.alpha, field.field)
+        dot_products = _dot_roots_with_field2d(self.alpha, field.field)
 
         # Exponentiate the dot products and add an axis for vectorized math
         exp = np.exp(dot_products)[:, np.newaxis, :, :]
@@ -86,7 +86,7 @@ class Superpotential:
             at each point. Has the same shape as field.field.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field(self.alpha, field.field)
+        dot_products = _dot_roots_with_field2d(self.alpha, field.field)
 
         # Exponentiate the dot products and add an axis for vectorized math
         exp = np.exp(dot_products)[:, np.newaxis, :, :]
@@ -104,8 +104,8 @@ class Superpotential:
         return laplacian / 4
 
 
-def _dot_roots_with_field(alpha, field):
-    """Compute the dot product of a field with the simple roots of SU(N).
+def _dot_roots_with_field2d(alpha, field):
+    """Compute the dot product of a 2D field with the simple roots of SU(N).
 
     Parameters
     ----------
@@ -123,4 +123,26 @@ def _dot_roots_with_field(alpha, field):
         grid for each root. The first axis represents the roots.
     """
     product = alpha[:, :, np.newaxis, np.newaxis] * field[np.newaxis, :, :, :]
+    return np.sum(product, axis=1)
+
+
+def _dot_roots_with_field1d(alpha, field):
+    """Compute the dot product of a 1D field with the simple roots of SU(N).
+
+    Parameters
+    ----------
+    alpha : ndarray
+        Array of shape (N, N-1) giving the simple roots and affine root of
+        SU(N), such as returned by weights.get_simple_roots(N).
+    field : ndarray
+        Array of shape (N-1, ny) representing the field at each point of the
+        grid.
+
+    Returns
+    -------
+    dot_products : ndarray
+        Array of shape (N, ny) giving the dot product at each point of the grid
+        for each root. The first axis represents the roots.
+    """
+    product = alpha[:, :, np.newaxis] * field[np.newaxis, :, :]
     return np.sum(product, axis=1)
