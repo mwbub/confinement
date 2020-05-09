@@ -289,3 +289,29 @@ class RelaxationSolver1D(RelaxationSolver):
         # Normalize and return the error
         error /= f.size
         return error
+
+
+class PoissonSolver1D(RelaxationSolver1D):
+    """
+    A class used to solve a discretized 1D Poisson problem for a complex-valued
+    vector field, using the relaxation method.
+    """
+
+    def __init__(self, field, func):
+        """Initialize this PoissonSolver1D.
+
+        Parameters
+        ----------
+        field : Field1D
+            The vector field which defines the grid and where the solution will
+            ultimately be stored. The solver assumes that the boundary
+            conditions for the field have already been set.
+        func : callable(Field1D)
+            The function which defines the second derivative of the field. This
+            should take as its argument the field, and return a complex-valued
+            array of the same shape as field.field which gives the second
+            derivative at each point. It is assumed that func depends only on
+            the grid coordinates, and not on the value of the field.
+        """
+        deriv = func(field)
+        super().__init__(field, lambda f: deriv)
