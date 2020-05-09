@@ -82,7 +82,7 @@ class Field1D(Field):
         self.ymin = ymin
         self.ymax = ymax
 
-        # Number of grid points along each axis
+        # Number of grid points
         self.ny = int((ymax - ymin) / gridsize) + 1
 
         # Array of shape (n, ny) representing the field
