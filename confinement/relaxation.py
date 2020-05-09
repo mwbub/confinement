@@ -1,4 +1,5 @@
 import numpy as np
+_ERASESTR = "                                                                  "
 
 
 class RelaxationSolver:
@@ -54,7 +55,7 @@ class RelaxationSolver:
         """
         raise NotImplementedError
 
-    def solve(self, method='jacobi', tol=1e-5, maxiter=1000):
+    def solve(self, method='jacobi', tol=1e-5, maxiter=1000, verbose=False):
         """Solve the PDE.
 
         Parameters
@@ -67,12 +68,18 @@ class RelaxationSolver:
             converged once this threshold is reached.
         maxiter : int
             Maximum number of iterations until halting.
+        verbose : bool
+            If True, print the iteration number and current error after each
+            iteration.
 
         Returns
         -------
         iterations : int
             Number of iterations until the solution converged or maxiter was
             reached.
+        error : float
+            The average absolute difference between each component of the
+            updated field and the old field on the final iteration.
         """
         if method == 'jacobi':
             update = self.update_jacobi
@@ -82,12 +89,19 @@ class RelaxationSolver:
             raise ValueError("method must be 'jacobi' or 'gauss'")
 
         i = 0
+        error = np.inf
         for i in range(maxiter):
             error = update()
+            if verbose:
+                outstr = "Iter: {}\tError: {:.3g}".format(i + 1, error)
+                print(_ERASESTR + "\r" + outstr, end="\r")
             if error < tol:
                 break
 
-        return i + 1
+        if verbose:
+            print()
+
+        return i + 1, error
 
 
 class RelaxationSolver2D(RelaxationSolver):
