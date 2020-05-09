@@ -3,6 +3,25 @@ import numpy as np
 
 class Field:
     """
+    Abstract parent class of Field2D and Field1D.
+    """
+
+    def __init__(self, n, gridsize):
+        """Initialize this Field.
+
+        Parameters
+        ----------
+        n : int
+            Number of field components.
+        gridsize : float
+            Grid division size.
+        """
+        self.n = n
+        self.gridsize = gridsize
+
+
+class Field2D(Field):
+    """
     A class used to represent a discretized complex-valued vector field in two
     spatial dimensions.
     """
@@ -25,12 +44,11 @@ class Field:
         gridsize : float
             Grid division size.
         """
-        self.n = n
+        super().__init__(n, gridsize)
         self.zmin = zmin
         self.zmax = zmax
         self.ymin = ymin
         self.ymax = ymax
-        self.gridsize = gridsize
 
         # Number of grid points along each axis
         self.nz = int((zmax - zmin) / gridsize) + 1
@@ -40,7 +58,7 @@ class Field:
         self.field = np.zeros((self.n, self.nz, self.ny), dtype=complex)
 
 
-class Field1D:
+class Field1D(Field):
     """
     A class used to represent a discretized complex-valued vector field in one
     spatial dimension.
@@ -60,10 +78,9 @@ class Field1D:
         gridsize : float
             Grid division size.
         """
-        self.n = n
+        super().__init__(n, gridsize)
         self.ymin = ymin
         self.ymax = ymax
-        self.gridsize = gridsize
 
         # Number of grid points along each axis
         self.ny = int((ymax - ymin) / gridsize) + 1

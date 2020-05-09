@@ -1,5 +1,4 @@
 import numpy as np
-from .field import Field
 
 
 class RelaxationSolver:
@@ -14,11 +13,11 @@ class RelaxationSolver:
 
         Parameters
         ----------
-        field : Field
+        field : Field2D
             The vector field which defines the grid and where the solution will
             ultimately be stored. The solver assumes that the boundary
             conditions for the field have already been set.
-        func : callable(Field)
+        func : callable(Field2D)
             The function which defines the Laplacian of the field. This should
             take as its argument the field, and return a complex-valued array
             of the same shape as field.field which gives the Laplacian at each
@@ -141,11 +140,11 @@ class PoissonSolver(RelaxationSolver):
 
         Parameters
         ----------
-        field : Field
+        field : Field2D
             The vector field which defines the grid and where the solution will
             ultimately be stored. The solver assumes that the boundary
             conditions for the field have already been set.
-        func : callable(Field)
+        func : callable(Field2D)
             The function which defines the Laplacian of the field. This should
             take as its argument the field, and return a complex-valued array
             of the same shape as field.field which gives the Laplacian at each

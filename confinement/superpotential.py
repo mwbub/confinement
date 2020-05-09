@@ -24,7 +24,7 @@ class Superpotential:
 
         Parameters
         ----------
-        field : Field
+        field : Field2D
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
 
@@ -42,7 +42,7 @@ class Superpotential:
 
         Parameters
         ----------
-        field : Field
+        field : Field2D
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
 
@@ -75,7 +75,7 @@ class Superpotential:
 
         Parameters
         ----------
-        field : Field
+        field : Field2D
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
 
