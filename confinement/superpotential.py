@@ -18,7 +18,6 @@ class Superpotential:
         """
         self.N = N
         self.alpha = get_simple_roots(N)
-        self.alpha_shifted = np.roll(self.alpha, -1, axis=0)
 
     def __call__(self, field):
         """Evaluate this Superpotential on a field.
@@ -53,29 +52,23 @@ class Superpotential:
             Array giving the value of the Laplacian due to this Superpotential
             at each point. Has the same shape as field.field.
         """
-        f = field.field
+        # Compute the dot products of the field with the roots
+        dot_products = _dot_roots_with_field(self.alpha, field.field)
 
-        # Add new axes to the root arrays for vectorized operations
-        alpha = self.alpha[:, :, np.newaxis, np.newaxis]
-        alpha_shifted = self.alpha_shifted[:, :, np.newaxis, np.newaxis]
+        # Exponentiate the dot products and add an axis for vectorized math
+        exp = np.exp(dot_products)[:, np.newaxis, :, :]
 
-        # Compute the dot product of the field with the roots, and add an axis
-        dot_products = _dot_roots_with_field(self.alpha, f)[:, np.newaxis, :, :]
-
-        # Exponentiate the dot products, shift left, and compute the conjugates
-        exp = np.exp(dot_products)
-        exp_shifted = np.roll(exp, -1, axis=0)
+        # Compute the conjugate and shifted exponential arrays
         exp_conj = np.conj(exp)
-        exp_conj_shifted = np.conj(exp_shifted)
+        exp_shifted_up = np.roll(exp, -1, axis=0)
+        exp_shifted_down = np.roll(exp, 1, axis=0)
 
-        # Compute the terms of the summand
-        term1 = alpha * exp * exp_conj
-        term2 = alpha * exp_shifted * exp_conj
-        term3 = alpha_shifted * exp * exp_conj_shifted
-        summand = 2 * term1 - term2 - term3
+        # Compute the summands using vectorized operations
+        summand = (self.alpha[:, :, np.newaxis, np.newaxis] * exp_conj
+                   * (2 * exp - exp_shifted_up - exp_shifted_down))
 
-        # Return the sum
-        return np.sum(summand, axis=0)
+        # Return the potential term of the Laplacian
+        return np.sum(summand, axis=0) / 4
 
     def _field_laplacian_naive(self, field):
         """Naive implementation of field_laplacian, used for testing purposes.
@@ -92,19 +85,23 @@ class Superpotential:
             Array giving the value of the Laplacian due to this Superpotential
             at each point. Has the same shape as field.field.
         """
-        f = field.field
-        alpha = self.alpha[:, :, np.newaxis, np.newaxis]
-        laplacian = np.zeros_like(f)
+        # Compute the dot products of the field with the roots
+        dot_products = _dot_roots_with_field(self.alpha, field.field)
 
-        dot_products = _dot_roots_with_field(self.alpha, f)[:, np.newaxis, :, :]
-        exp = np.exp(dot_products)
+        # Exponentiate the dot products and add an axis for vectorized math
+        exp = np.exp(dot_products)[:, np.newaxis, :, :]
         exp_conj = np.conj(exp)
 
+        # Compute the potential term of the Laplacian by an explicit loop
+        laplacian = np.zeros_like(field.field)
         for a in range(self.N):
             for b in range(self.N):
-                laplacian += (alpha[b] * np.sum(alpha[a] * alpha[b]) * exp[a]
-                              * exp_conj[b])
-        return laplacian
+                laplacian += (self.alpha[b][:, np.newaxis, np.newaxis]
+                              * np.dot(self.alpha[a], self.alpha[b])
+                              * exp[a] * exp_conj[b])
+
+        # Return the potential term of the Laplacian
+        return laplacian / 4
 
 
 def _dot_roots_with_field(alpha, field):
