@@ -120,9 +120,9 @@ class Field2D(Field):
         """
         # Load the file and initialize the field
         with np.load(filename) as data:
-            field = cls(int(data['n']), int(data['zmin']), int(data['zmax']),
-                        int(data['ymin']), int(data['ymax']),
-                        float(data['gridsize']))
+            field = cls(int(data['n']), float(data['zmin']),
+                        float(data['zmax']), float(data['ymin']),
+                        float(data['ymax']), float(data['gridsize']))
             field.field = data['field']
 
         # Check that the field has the correct shape
@@ -195,8 +195,8 @@ class Field1D(Field):
         """
         # Load the file and initialize the field
         with np.load(filename) as data:
-            field = cls(int(data['n']), int(data['ymin']), int(data['ymax']),
-                        float(data['gridsize']))
+            field = cls(int(data['n']), float(data['ymin']),
+                        float(data['ymax']), float(data['gridsize']))
             field.field = data['field']
 
         # Check that the field has the correct shape
