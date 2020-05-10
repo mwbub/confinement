@@ -118,11 +118,19 @@ class Field2D(Field):
         field : Field2D
             The loaded field.
         """
+        # Load the file and initialize the field
         with np.load(filename) as data:
             field = cls(int(data['n']), int(data['zmin']), int(data['zmax']),
                         int(data['ymin']), int(data['ymax']),
                         float(data['gridsize']))
             field.field = data['field']
+
+        # Check that the field has the correct shape
+        shape = (field.n, field.nz, field.ny)
+        if field.field.shape != shape:
+            raise ValueError("field has shape {}, but expected "
+                             "{}".format(field.field.shape, shape))
+
         return field
 
 
@@ -185,8 +193,16 @@ class Field1D(Field):
         field : Field1D
             The loaded field.
         """
+        # Load the file and initialize the field
         with np.load(filename) as data:
             field = cls(int(data['n']), int(data['ymin']), int(data['ymax']),
                         float(data['gridsize']))
             field.field = data['field']
+
+        # Check that the field has the correct shape
+        shape = (field.n, field.ny)
+        if field.field.shape != shape:
+            raise ValueError("field has shape {}, but expected "
+                             "{}".format(field.field.shape, shape))
+
         return field
