@@ -20,6 +20,36 @@ class Field:
         self.gridsize = gridsize
         self.field = None
 
+    def save(self, filename):
+        """Save this Field to a file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file.
+
+        Returns
+        -------
+        None
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def load(cls, filename):
+        """Load a Field from a file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file.
+
+        Returns
+        -------
+        field : Field
+            The loaded field.
+        """
+        raise NotImplementedError
+
 
 class Field2D(Field):
     """
@@ -58,6 +88,43 @@ class Field2D(Field):
         # Array of shape (n, nz, ny) representing the field
         self.field = np.zeros((self.n, self.nz, self.ny), dtype=complex)
 
+    def save(self, filename):
+        """Save this Field2D to a file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file.
+
+        Returns
+        -------
+        None
+        """
+        np.savez(filename, field=self.field, n=self.n, zmin=self.zmin,
+                 zmax=self.zmax, ymin=self.ymin, ymax=self.ymax,
+                 gridsize=self.gridsize)
+
+    @classmethod
+    def load(cls, filename):
+        """Load a Field2D from a file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file.
+
+        Returns
+        -------
+        field : Field2D
+            The loaded field.
+        """
+        with np.load(filename) as data:
+            field = cls(int(data['n']), int(data['zmin']), int(data['zmax']),
+                        int(data['ymin']), int(data['ymax']),
+                        float(data['gridsize']))
+            field.field = data['field']
+        return field
+
 
 class Field1D(Field):
     """
@@ -88,3 +155,38 @@ class Field1D(Field):
 
         # Array of shape (n, ny) representing the field
         self.field = np.zeros((self.n, self.ny), dtype=complex)
+
+    def save(self, filename):
+        """Save this Field1D to a file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file.
+
+        Returns
+        -------
+        None
+        """
+        np.savez(filename, field=self.field, n=self.n, ymin=self.ymin,
+                 ymax=self.ymax, gridsize=self.gridsize)
+
+    @classmethod
+    def load(cls, filename):
+        """Load a Field1D from a file.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file.
+
+        Returns
+        -------
+        field : Field1D
+            The loaded field.
+        """
+        with np.load(filename) as data:
+            field = cls(int(data['n']), int(data['ymin']), int(data['ymax']),
+                        float(data['gridsize']))
+            field.field = data['field']
+        return field
