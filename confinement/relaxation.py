@@ -286,8 +286,7 @@ class RelaxationSolver1D(RelaxationSolver):
         deriv = self.func(self.field)
 
         # Compute the new values of the field using vectorized operations
-        residual = (f[:, :-2] + f[:, 2:] - h**2 * deriv[:, 1:-1]
-                    - 2 * f[:, 1:-1])
+        residual = f[:, :-2] + f[:, 2:] - h**2 * deriv[:, 1:-1] - 2 * f[:, 1:-1]
         delta = residual * omega / 2
 
         # Update the field
