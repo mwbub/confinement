@@ -281,8 +281,8 @@ class RelaxationSolver1D(RelaxationSolver):
         f_old = np.copy(f)
 
         # Compute the new values of the field using an explicit loop
-        for i in range(1, self.field.ny - 1):
-            f[:, i] = (f[:, i - 1] + f[:, i + 1] - h**2 * deriv[:, i]) / 2
+        for i in range(1, self.field.nz - 1):
+            f[:, i] += (f[:, i - 1] + f[:, i + 1] - h**2 * deriv[:, i]) / 2
 
         # Compute the error
         error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
