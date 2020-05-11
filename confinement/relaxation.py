@@ -67,7 +67,7 @@ class RelaxationSolver:
         """
         raise NotImplementedError
 
-    def solve(self, method='gauss', tol=1e-4, maxiter=10000, omega=1.,
+    def solve(self, method='gauss', tol=1e-4, maxiter=1000, omega=1.,
               verbose=False):
         """Solve the PDE.
 
