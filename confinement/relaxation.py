@@ -35,8 +35,7 @@ class RelaxationSolver:
         Returns
         -------
         error : float
-            The current error, defined as the average absolute difference
-            between each component of the new field and the old field.
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
         raise NotImplementedError
 
@@ -50,12 +49,11 @@ class RelaxationSolver:
         Returns
         -------
         error : float
-            The current error, defined as the average absolute difference
-            between each component of the new field and the old field.
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
         raise NotImplementedError
 
-    def solve(self, method='jacobi', tol=1e-5, maxiter=1000, verbose=False):
+    def solve(self, method='jacobi', tol=1e-4, maxiter=10000, verbose=False):
         """Solve the PDE.
 
         Parameters
@@ -78,8 +76,8 @@ class RelaxationSolver:
             Number of iterations until the solution converged or maxiter was
             reached.
         error : float
-            The average absolute difference between each component of the
-            updated field and the old field on the final iteration.
+            The error, defined as max(|f_new - f_old|) / max(|f_new|), of the
+            final iteration.
         """
         if method == 'jacobi':
             update = self.update_jacobi
@@ -93,7 +91,7 @@ class RelaxationSolver:
         for i in range(maxiter):
             error = update()
             if verbose:
-                outstr = "Iter: {}\tError: {:.3g}".format(i + 1, error)
+                outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
                 print(_ERASESTR + "\r" + outstr, end="\r")
             if error < tol:
                 break
@@ -138,8 +136,7 @@ class RelaxationSolver2D(RelaxationSolver):
         Returns
         -------
         error : float
-            The current error, defined as the average absolute difference
-            between each component of the new field and the old field.
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
         # Store the field, grid size, and Laplacian in temporary variables
         f = self.field.field
@@ -151,7 +148,7 @@ class RelaxationSolver2D(RelaxationSolver):
                  + f[:, 1:-1, 2:] - h**2 * laplacian[:, 1:-1, 1:-1]) / 4
 
         # Compute the error
-        error = np.sum(np.abs(f[:, 1:-1, 1:-1] - f_new)) / f.size
+        error = np.max(np.abs(f_new - f[:, 1:-1, 1:-1])) / np.max(np.abs(f_new))
 
         # Update the field
         f[:, 1:-1, 1:-1] = f_new
@@ -168,30 +165,22 @@ class RelaxationSolver2D(RelaxationSolver):
         Returns
         -------
         error : float
-            The current error, defined as the average absolute difference
-            between each component of the new field and the old field.
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
         # Store the field, grid size, and Laplacian in temporary variables
         f = self.field.field
         h = self.field.gridsize
         laplacian = self.func(self.field)
+        f_old = np.copy(f)
 
         # Compute the new values of the field using explicit loops
-        error = 0
         for i in range(1, self.field.nz - 1):
             for j in range(1, self.field.ny - 1):
-                # Compute the new value of f[:, i, j]
-                f_new = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
-                         + f[:, i, j + 1] - h**2 * laplacian[:, i, j]) / 4
+                f[:, i, j] = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
+                              + f[:, i, j + 1] - h**2 * laplacian[:, i, j]) / 4
 
-                # Increment the error
-                error += np.sum(np.abs(f[:, i, j] - f_new))
-
-                # Update the field
-                f[:, i, j] = f_new
-
-        # Normalize and return the error
-        error /= f.size
+        # Compute the error
+        error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
         return error
 
 
@@ -255,8 +244,7 @@ class RelaxationSolver1D(RelaxationSolver):
         Returns
         -------
         error : float
-            The current error, defined as the average absolute difference
-            between each component of the new field and the old field.
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
         # Store the field, grid size, and 2nd derivative in temporary variables
         f = self.field.field
@@ -267,7 +255,7 @@ class RelaxationSolver1D(RelaxationSolver):
         f_new = (f[:, :-2] + f[:, 2:] - h**2 * deriv[:, 1:-1]) / 2
 
         # Compute the error
-        error = np.sum(np.abs(f[:, 1:-1] - f_new)) / f.size
+        error = np.max(np.abs(f_new - f[:, 1:-1])) / np.max(np.abs(f_new))
 
         # Update the field
         f[:, 1:-1] = f_new
@@ -284,24 +272,20 @@ class RelaxationSolver1D(RelaxationSolver):
         Returns
         -------
         error : float
-            The current error, defined as the average absolute difference
-            between each component of the new field and the old field.
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
         # Store the field, grid size, and 2nd derivative in temporary variables
         f = self.field.field
         h = self.field.gridsize
         deriv = self.func(self.field)
+        f_old = np.copy(f)
 
-        # Compute the new values of the field using explicit loops
-        error = 0
+        # Compute the new values of the field using an explicit loop
         for i in range(1, self.field.ny - 1):
-            # Compute the new value of the field and increment the error
-            f_new = (f[:, i - 1] + f[:, i + 1] - h**2 * deriv[:, i]) / 2
-            error += np.sum(np.abs(f[:, i] - f_new))
-            f[:, i] = f_new
+            f[:, i] = (f[:, i - 1] + f[:, i + 1] - h**2 * deriv[:, i]) / 2
 
-        # Normalize and return the error
-        error /= f.size
+        # Compute the error
+        error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
         return error
 
 
