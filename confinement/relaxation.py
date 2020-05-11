@@ -92,7 +92,7 @@ class RelaxationSolver:
             error = update()
             if verbose:
                 outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
-                print(_ERASESTR + "\r" + outstr, end="\r")
+                print("\r" + _ERASESTR + "\r" + outstr, end="\r")
             if error < tol:
                 break
 
