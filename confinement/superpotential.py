@@ -70,6 +70,44 @@ class Superpotential:
         # Return the potential term of the Laplacian
         return np.sum(summand, axis=0) / 4
 
+    def bps_eom(self, field):
+        """Compute the second-order BPS equation of motion for a 1D field.
+
+        Parameters
+        ----------
+        field : Field1D
+            The field on which to evaluate. This vector field must have N-1
+            component scalar fields.
+
+        Returns
+        -------
+        deriv : ndarray
+            Array giving the value of the second derivative of the field under
+            the BPS equation at each point. Has the same shape as field.field.
+        """
+        # Compute the dot products of the field with the roots
+        dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+
+        # Exponentiate the dot products and compute the conjugate
+        exp = np.exp(dot_products)
+        exp_conj = np.conj(exp)
+
+        # Compute the first inner sum
+        sum1 = exp[:, np.newaxis, :] * self.alpha[:, :, np.newaxis]
+        sum1 = np.sum(sum1, axis=0)
+
+        # Compute the second inner sum
+        sum2 = (exp_conj[:, np.newaxis, np.newaxis, :]
+                * self.alpha[:, :, np.newaxis, np.newaxis]
+                * self.alpha[:, np.newaxis, :, np.newaxis])
+        sum2 = np.sum(sum2, axis=0)
+
+        # Compute the outer sum
+        sum3 = sum1[:, np.newaxis, :] * sum2
+        sum3 = np.sum(sum3, axis=0)
+
+        return sum3 / 4
+
     def _eom_naive(self, field):
         """Naive implementation of eom, used for testing purposes.
 
@@ -135,13 +173,13 @@ def _dot_roots_with_field1d(alpha, field):
         Array of shape (N, N-1) giving the simple roots and affine root of
         SU(N), such as returned by weights.get_simple_roots(N).
     field : ndarray
-        Array of shape (N-1, ny) representing the field at each point of the
+        Array of shape (N-1, nz) representing the field at each point of the
         grid.
 
     Returns
     -------
     dot_products : ndarray
-        Array of shape (N, ny) giving the dot product at each point of the grid
+        Array of shape (N, nz) giving the dot product at each point of the grid
         for each root. The first axis represents the roots.
     """
     product = alpha[:, :, np.newaxis] * field[np.newaxis, :, :]
