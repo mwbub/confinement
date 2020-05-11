@@ -140,29 +140,29 @@ class Field1D(Field):
     spatial dimension.
     """
 
-    def __init__(self, n, ymin, ymax, gridsize):
+    def __init__(self, n, zmin, zmax, gridsize):
         """Initialize this Field1D.
 
         Parameters
         ----------
         n : int
             Number of field components.
-        ymin : float
+        zmin : float
             Leftmost point of the domain.
-        ymax : float
+        zmax : float
             Rightmost point of the domain.
         gridsize : float
             Grid division size.
         """
         super().__init__(n, gridsize)
-        self.ymin = ymin
-        self.ymax = ymax
+        self.zmin = zmin
+        self.zmax = zmax
 
         # Number of grid points
-        self.ny = int((ymax - ymin) / gridsize) + 1
+        self.nz = int((zmax - zmin) / gridsize) + 1
 
-        # Array of shape (n, ny) representing the field
-        self.field = np.zeros((self.n, self.ny), dtype=complex)
+        # Array of shape (n, nz) representing the field
+        self.field = np.zeros((self.n, self.nz), dtype=complex)
 
     def save(self, filename):
         """Save this Field1D to a file.
@@ -176,8 +176,8 @@ class Field1D(Field):
         -------
         None
         """
-        np.savez(filename, field=self.field, n=self.n, ymin=self.ymin,
-                 ymax=self.ymax, gridsize=self.gridsize)
+        np.savez(filename, field=self.field, n=self.n, zmin=self.zmin,
+                 zmax=self.zmax, gridsize=self.gridsize)
 
     @classmethod
     def load(cls, filename):
@@ -195,12 +195,12 @@ class Field1D(Field):
         """
         # Load the file and initialize the field
         with np.load(filename) as data:
-            field = cls(int(data['n']), float(data['ymin']),
-                        float(data['ymax']), float(data['gridsize']))
+            field = cls(int(data['n']), float(data['zmin']),
+                        float(data['zmax']), float(data['gridsize']))
             field.field = data['field']
 
         # Check that the field has the correct shape
-        shape = (field.n, field.ny)
+        shape = (field.n, field.nz)
         if field.field.shape != shape:
             raise ValueError("field has shape {}, but expected "
                              "{}".format(field.field.shape, shape))
