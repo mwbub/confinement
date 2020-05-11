@@ -1,4 +1,5 @@
 import numpy as np
+from numba import jit
 _ERASESTR = "                                                                  "
 
 
@@ -203,14 +204,8 @@ class RelaxationSolver2D(RelaxationSolver):
         laplacian = self.func(self.field)
         f_old = np.copy(f)
 
-        # Compute the new values of the field using explicit loops
-        for i in range(1, self.field.nz - 1):
-            for j in range(1, self.field.ny - 1):
-                residual = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
-                            + f[:, i, j + 1] - 4 * f[:, i, j]
-                            - h**2 * laplacian[:, i, j])
-                delta = residual * omega / 4
-                f[:, i, j] += delta
+        # Update the field using compiled code
+        _update_gauss2d(f, h, laplacian, omega)
 
         # Compute the error
         error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
@@ -327,12 +322,8 @@ class RelaxationSolver1D(RelaxationSolver):
         deriv = self.func(self.field)
         f_old = np.copy(f)
 
-        # Compute the new values of the field using an explicit loop
-        for i in range(1, self.field.nz - 1):
-            residual = (f[:, i-1] + f[:, i+1] - h ** 2 * deriv[:, i]
-                        - 2 * f[:, i])
-            delta = residual * omega / 2
-            f[:, i] += delta
+        # Update the field using compiled code
+        _update_gauss1d(f, h, deriv, omega)
 
         # Compute the error
         error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
@@ -363,3 +354,56 @@ class PoissonSolver1D(RelaxationSolver1D):
         """
         deriv = func(field)
         super().__init__(field, lambda f: deriv)
+
+
+@jit(nopython=True)
+def _update_gauss2d(f, h, laplacian, omega):
+    """Update a 2D field using the Gauss-Seidel method.
+
+    Parameters
+    ----------
+    f : ndarray
+        The field. Has shape (n, nz, ny), where n is the number of components.
+    h : float
+        The gridsize.
+    laplacian : ndarray
+        Array of the laplacian at each point. Has the same shape as f.
+    omega : float
+        The relaxation parameter.
+
+    Returns
+    -------
+    None
+    """
+    for i in range(1, f.shape[1] - 1):
+        for j in range(1, f.shape[2] - 1):
+            residual = (f[:, i - 1, j] + f[:, i + 1, j] + f[:, i, j - 1]
+                        + f[:, i, j + 1] - 4 * f[:, i, j]
+                        - h**2 * laplacian[:, i, j])
+            delta = residual * omega / 4
+            f[:, i, j] += delta
+
+
+@jit(nopython=True)
+def _update_gauss1d(f, h, deriv, omega):
+    """Update a 1D field using the Gauss-Seidel method.
+
+    Parameters
+    ----------
+    f : ndarray
+        The field. Has shape (n, nz), where n is the number of components.
+    h : float
+        The gridsize.
+    deriv : ndarray
+        Array of the second derivative at each point. Has the same shape as f.
+    omega : float
+        The relaxation parameter.
+
+    Returns
+    -------
+    None
+    """
+    for i in range(1, f.shape[1] - 1):
+        residual = f[:, i - 1] + f[:, i + 1] - 2 * f[:, i] - h**2 * deriv[:, i]
+        delta = residual * omega / 2
+        f[:, i] += delta
