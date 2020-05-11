@@ -51,7 +51,8 @@ class RelaxationSolver:
 
         This method converges faster than the Jacobi method, but is implemented
         with explict loops rather than vectorized array operations, which may
-        slow down the computations.
+        slow down the computations. The speed of the loops are enhanced using
+        the numba just-in-time compiler.
 
         Parameters
         ----------
@@ -66,7 +67,7 @@ class RelaxationSolver:
         """
         raise NotImplementedError
 
-    def solve(self, method='jacobi', tol=1e-4, maxiter=10000, omega=1.,
+    def solve(self, method='gauss', tol=1e-4, maxiter=10000, omega=1.,
               verbose=False):
         """Solve the PDE.
 
@@ -185,7 +186,8 @@ class RelaxationSolver2D(RelaxationSolver):
 
         This method converges faster than the Jacobi method, but is implemented
         with explict loops rather than vectorized array operations, which may
-        slow down the computations.
+        slow down the computations. The speed of the loops are enhanced using
+        the numba just-in-time compiler.
 
         Parameters
         ----------
@@ -302,7 +304,8 @@ class RelaxationSolver1D(RelaxationSolver):
 
         This method converges faster than the Jacobi method, but is implemented
         with explict loops rather than vectorized array operations, which may
-        slow down the computations.
+        slow down the computations. The speed of the loops are enhanced using
+        the numba just-in-time compiler.
 
         Parameters
         ----------
