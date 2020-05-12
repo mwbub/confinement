@@ -43,6 +43,34 @@ class Superpotential:
             raise ValueError("field has incorrect shape")
         return np.sum(np.exp(dot_products), axis=0)
 
+    def gradient(self, field):
+        """Compute the gradient of this Superpotential with respect to a field.
+
+        Parameters
+        ----------
+        field : Field
+            The field on which to evaluate. This vector field must have N-1
+            component scalar fields.
+
+        Returns
+        -------
+        gradient : ndarray
+            The gradient of this Superpotential at each point. Has the same
+            shape as field.field.
+        """
+        if field.field.ndim == 3:
+            dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+            exp = np.exp(dot_products)[:, np.newaxis, :, :]
+            summand = exp * self.alpha[:, :, np.newaxis, np.newaxis]
+        elif field.field.ndim == 2:
+            dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+            exp = np.exp(dot_products)[:, np.newaxis, :]
+            summand = exp * self.alpha[:, :, np.newaxis]
+        else:
+            raise ValueError("field has incorrect shape")
+
+        return np.sum(summand, axis=0)
+
     def eom(self, field):
         """Compute the field equation of motion term due to this Superpotential.
 
