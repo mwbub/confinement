@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.integrate import simps
 from .weights import get_simple_roots
 
 
@@ -24,18 +25,22 @@ class Superpotential:
 
         Parameters
         ----------
-        field : Field
+        field : Field or ndarray
             The field on which to evaluate. This vector field must have N-1
-            component scalar fields.
+            component scalar fields. If type is ndarray, then the array must
+            have shape (N-1,).
 
         Returns
         -------
         W : ndarray
             The value of the superpotential at each point. If field.field has
             shape (N-1, nz, ny), then W has shape (nz, ny). If field.field has
-            shape (N-1, nz), then W has shape (nz,).
+            shape (N-1, nz), then W has shape (nz,). If field is an ndarray,
+            then W is a scalar.
         """
-        if field.field.ndim == 3:
+        if isinstance(field, np.ndarray):
+            dot_products = np.sum(self.alpha * field[np.newaxis, :], axis=1)
+        elif field.field.ndim == 3:
             dot_products = _dot_roots_with_field2d(self.alpha, field.field)
         elif field.field.ndim == 2:
             dot_products = _dot_roots_with_field1d(self.alpha, field.field)
@@ -101,6 +106,26 @@ class Superpotential:
         # Compute the energy density
         summand = np.abs(df_dz)**2 + np.abs(df_dy)**2 + np.abs(dw)**2 / 4
         return np.sum(summand, axis=0)
+
+    def energy(self, field):
+        """Compute the energy of a field under this Superpotential.
+
+        Parameters
+        ----------
+        field : Field
+            The field on which to evaluate. This vector field must have N-1
+            component scalar fields.
+
+        Returns
+        -------
+        energy : float
+            The total energy.
+        """
+        # Compute the energy density and repeatedly integrate over all axes
+        energy = self.energy_density(field)
+        while energy.ndim > 0:
+            energy = simps(energy, dx=field.gridsize)
+        return energy
 
     def eom(self, field):
         """Compute the field equation of motion term due to this Superpotential.
