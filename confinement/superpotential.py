@@ -32,11 +32,11 @@ class Superpotential:
 
         Returns
         -------
-        W : ndarray
+        W : ndarray or float
             The value of the superpotential at each point. If field.field has
             shape (N-1, nz, ny), then W has shape (nz, ny). If field.field has
             shape (N-1, nz), then W has shape (nz,). If field is an ndarray,
-            then W is a scalar.
+            with shape (N-1,), then W is a scalar.
         """
         if isinstance(field, np.ndarray):
             dot_products = np.sum(self.alpha * field[np.newaxis, :], axis=1)
@@ -46,6 +46,7 @@ class Superpotential:
             dot_products = _dot_roots_with_field1d(self.alpha, field.field)
         else:
             raise ValueError("field has incorrect shape")
+
         return np.sum(np.exp(dot_products), axis=0)
 
     def gradient(self, field):
