@@ -124,13 +124,9 @@ class Superpotential:
         left_val, right_val = self(field)[[1, -1]]
         factor = (right_val - left_val) / np.abs(right_val - left_val)
 
-        # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field1d(self.alpha, field.field)
-        exp_conj = np.conj(np.exp(dot_products))
-
-        # Compute the summands and perform the sum
-        summand = exp_conj[:, np.newaxis, :] * self.alpha[:, :, np.newaxis]
-        return np.sum(summand, axis=0) * factor / 2
+        # Compute the gradient and return the BPS derivative
+        gradient = self.gradient(field)
+        return np.conj(gradient) * factor / 2
 
     def bps_eom(self, field):
         """Compute the second-order BPS equation of motion for a 1D field.
