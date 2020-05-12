@@ -222,6 +222,23 @@ class Superpotential:
 
         return sum3 / 4
 
+    def bps_energy(self, vacuum1, vacuum2):
+        """Compute the energy of a BPS soliton interpolating between two vacua.
+
+        Parameters
+        ----------
+        vacuum1 : ndarray
+            Array of shape (N-1,) giving the vacuum at negative infinity.
+        vacuum2 : ndarray
+            Array of shape (N-1,) giving the vacuum and positive infintiy.
+
+        Returns
+        -------
+        bps_energy : float
+            The energy of a BPS soliton interpolating between the two vacua.
+        """
+        return np.abs(self(vacuum2) - self(vacuum1))
+
     def _eom_naive(self, field):
         """Naive implementation of eom, used for testing purposes.
 
