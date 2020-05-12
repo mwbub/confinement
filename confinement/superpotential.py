@@ -24,7 +24,7 @@ class Superpotential:
 
         Parameters
         ----------
-        field : Field2D
+        field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
 
@@ -32,9 +32,15 @@ class Superpotential:
         -------
         W : ndarray
             The value of the superpotential at each point. If field.field has
-            shape (N-1, nz, ny), then W has shape (nz, ny).
+            shape (N-1, nz, ny), then W has shape (nz, ny). If field.field has
+            shape (N-1, nz), then W has shape (nz).
         """
-        dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+        if field.field.ndim == 3:
+            dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+        elif field.field.ndim == 2:
+            dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+        else:
+            raise ValueError("field has incorrect shape")
         return np.sum(np.exp(dot_products), axis=0)
 
     def eom(self, field):
@@ -69,6 +75,34 @@ class Superpotential:
 
         # Return the potential term of the Laplacian
         return np.sum(summand, axis=0) / 4
+
+    def bps(self, field):
+        """Compute the first derivative of a field from the BPS equation.
+
+        Parameters
+        ----------
+        field : Field1D
+            The field on which to evaluate. This vector field must have N-1
+            component scalar fields. The leftmost and rightmost values of the
+            field are assumed to be the desired boundary values at infinity.
+
+        Returns
+        -------
+        df : ndarray
+            Array giving the value of the derivative of the field under the BPS
+            equation at each point. Has the same shape as field.field.
+        """
+        # Values of the Superpotential at +/- infinity
+        left_val, right_val = self(field)[[1, -1]]
+        factor = (right_val - left_val) / np.abs(right_val - left_val)
+
+        # Compute the dot products of the field with the roots
+        dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+        exp_conj = np.conj(np.exp(dot_products))
+
+        # Compute the summands and perform the sum
+        summand = exp_conj[:, np.newaxis, :] * self.alpha[:, :, np.newaxis]
+        return np.sum(summand, axis=0) * factor / 2
 
     def bps_eom(self, field):
         """Compute the second-order BPS equation of motion for a 1D field.
