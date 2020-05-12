@@ -152,7 +152,7 @@ class Superpotential:
             equation at each point. Has the same shape as field.field.
         """
         # Values of the Superpotential at +/- infinity
-        left_val, right_val = self(field)[[1, -1]]
+        left_val, right_val = self(field)[[0, -1]]
         factor = (right_val - left_val) / np.abs(right_val - left_val)
 
         # Compute the gradient and return the BPS derivative
