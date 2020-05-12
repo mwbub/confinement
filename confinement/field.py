@@ -50,6 +50,17 @@ class Field:
         """
         raise NotImplementedError
 
+    def gradient(self):
+        """Compute the gradient of this Field.
+
+        Returns
+        -------
+        gradient : ndarray or list of ndarray
+            A set of ndarrays corresponding to the derivatives of the field
+            along each spatial dimension.
+        """
+        raise NotImplementedError
+
 
 class Field2D(Field):
     """
@@ -133,6 +144,18 @@ class Field2D(Field):
 
         return field
 
+    def gradient(self):
+        """Compute the gradient of this Field2D.
+
+        Returns
+        -------
+        gradient : list of ndarray
+            A list of two ndarrays of the same shape as self.field,
+            corresponding to the derivatives of self.field along the z and y
+            axes, respectively.
+        """
+        return np.gradient(self.field, self.gridsize, axis=(1, 2))
+
 
 class Field1D(Field):
     """
@@ -206,3 +229,14 @@ class Field1D(Field):
                              "{}".format(field.field.shape, shape))
 
         return field
+
+    def gradient(self):
+        """Compute the derivative of this Field1D.
+
+        Returns
+        -------
+        gradient : ndarray
+            An ndarray with the same shape as self.field corresponding to the
+            derivative at each point.
+        """
+        return np.gradient(self.field, self.gridsize, axis=1)
