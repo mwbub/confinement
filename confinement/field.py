@@ -61,6 +61,30 @@ class Field:
         """
         raise NotImplementedError
 
+    def energy_density(self):
+        """Compute the energy density of this field due to its gradient.
+
+        Returns
+        -------
+        energy_density : ndarray
+            The energy density at each point.
+        """
+        raise NotImplementedError
+
+    def energy(self):
+        """Compute the energy of this field due to its gradient.
+
+        Returns
+        -------
+        energy : float
+            The total energy.
+        """
+        # Compute the energy density and repeatedly integrate over all axes
+        energy = self.energy_density()
+        while energy.ndim > 0:
+            energy = np.trapz(energy, dx=self.gridsize)
+        return energy
+
 
 class Field2D(Field):
     """
@@ -156,6 +180,17 @@ class Field2D(Field):
         """
         return np.gradient(self.field, self.gridsize, axis=(1, 2))
 
+    def energy_density(self):
+        """Compute the energy density of this field due to its gradient.
+
+        Returns
+        -------
+        energy_density : ndarray
+            The energy density at each point. Has shape (nz, ny).
+        """
+        df_dz, df_dy = self.gradient()
+        return np.sum(np.abs(df_dz)**2 + np.abs(df_dy)**2, axis=0)
+
 
 class Field1D(Field):
     """
@@ -240,3 +275,14 @@ class Field1D(Field):
             derivative at each point.
         """
         return np.gradient(self.field, self.gridsize, axis=1)
+
+    def energy_density(self):
+        """Compute the energy density of this field due to its gradient.
+
+        Returns
+        -------
+        energy_density : ndarray
+            The energy density at each point. Has shape (nz,).
+        """
+        df_dz = self.gradient()
+        return np.sum(np.abs(df_dz)**2, axis=0)

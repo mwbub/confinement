@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.integrate import simps
 from .weights import get_simple_roots
 
 
@@ -89,24 +88,12 @@ class Superpotential:
         Returns
         -------
         energy_density : ndarray
-            The energy density at each point. If field.field has shape
+            The potential energy density at each point. If field.field has shape
             (N-1, nz, ny), then energy_density has shape (nz, ny). Likewise,
             if field.field has shape (N-1, nz), then energy_density has shape
             (nz,).
         """
-        # Compute the gradients of the field and the potential
-        if field.field.ndim == 3:
-            df_dz, df_dy = field.gradient()
-        elif field.field.ndim == 2:
-            df_dz = field.gradient()
-            df_dy = np.zeros_like(df_dz)
-        else:
-            raise ValueError("field has incorrect shape")
-        dw = self.gradient(field)
-
-        # Compute the energy density
-        summand = np.abs(df_dz)**2 + np.abs(df_dy)**2 + np.abs(dw)**2 / 4
-        return np.sum(summand, axis=0)
+        return np.sum(np.abs(self.gradient(field))**2 / 4, axis=0)
 
     def energy(self, field):
         """Compute the energy of a field under this Superpotential.
@@ -120,12 +107,51 @@ class Superpotential:
         Returns
         -------
         energy : float
-            The total energy.
+            The total potential energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
         energy = self.energy_density(field)
         while energy.ndim > 0:
-            energy = simps(energy, dx=field.gridsize)
+            energy = np.trapz(energy, dx=field.gridsize)
+        return energy
+
+    def total_energy_density(self, field):
+        """Compute the total energy of a field under this Superpotential.
+
+        Parameters
+        ----------
+        field : Field
+            The field on which to evaluate. This vector field must have N-1
+            component scalar fields.
+
+        Returns
+        -------
+        energy_density : ndarray
+            The total energy density at each point. If field.field has shape
+            (N-1, nz, ny), then energy_density has shape (nz, ny). Likewise,
+            if field.field has shape (N-1, nz), then energy_density has shape
+            (nz,).
+        """
+        return self.energy_density(field) + field.energy_density()
+
+    def total_energy(self, field):
+        """Compute the total energy of a field under this Superpotential.
+
+        Parameters
+        ----------
+        field : Field
+            The field on which to evaluate. This vector field must have N-1
+            component scalar fields.
+
+        Returns
+        -------
+        energy : float
+            The total energy.
+        """
+        # Compute the energy density and repeatedly integrate over all axes
+        energy = self.total_energy_density(field)
+        while energy.ndim > 0:
+            energy = np.trapz(energy, dx=field.gridsize)
         return energy
 
     def eom(self, field):
