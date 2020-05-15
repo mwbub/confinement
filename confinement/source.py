@@ -110,7 +110,7 @@ class Meson:
         for i in range(field.nz):
             z = field.zmin + i * field.gridsize
             if self.z1 <= z <= self.z2:
-                laplacian[:, i, y_index - 1] = field_val
-                laplacian[:, i, y_index] = -field_val
+                laplacian[:, i, y_index - 1] = -field_val
+                laplacian[:, i, y_index] = field_val
 
         return laplacian
