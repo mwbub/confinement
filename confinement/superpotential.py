@@ -115,7 +115,7 @@ class Superpotential:
             energy = np.trapz(energy, dx=field.gridsize)
         return energy
 
-    def total_energy_density(self, field):
+    def total_energy_density(self, field, **kwargs):
         """Compute the total energy of a field under this Superpotential.
 
         Parameters
@@ -123,6 +123,8 @@ class Superpotential:
         field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        **kwargs
+            Keyword arguments to pass to field.energy_density().
 
         Returns
         -------
@@ -132,9 +134,9 @@ class Superpotential:
             if field.field has shape (N-1, nz), then energy_density has shape
             (nz,).
         """
-        return self.energy_density(field) + field.energy_density()
+        return self.energy_density(field) + field.energy_density(**kwargs)
 
-    def total_energy(self, field):
+    def total_energy(self, field, **kwargs):
         """Compute the total energy of a field under this Superpotential.
 
         Parameters
@@ -142,6 +144,8 @@ class Superpotential:
         field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        **kwargs
+            Keyword arguments to pass to field.energy_density().
 
         Returns
         -------
@@ -149,7 +153,7 @@ class Superpotential:
             The total energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        energy = self.total_energy_density(field)
+        energy = self.total_energy_density(field, **kwargs)
         while energy.ndim > 0:
             energy = np.trapz(energy, dx=field.gridsize)
         return energy

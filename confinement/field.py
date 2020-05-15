@@ -72,18 +72,14 @@ class Field:
         raise NotImplementedError
 
     def energy(self):
-        """Compute the energy of this field due to its gradient.
+        """Compute the energy of this Field due to its gradient.
 
         Returns
         -------
         energy : float
             The total energy.
         """
-        # Compute the energy density and repeatedly integrate over all axes
-        energy = self.energy_density()
-        while energy.ndim > 0:
-            energy = np.trapz(energy, dx=self.gridsize)
-        return energy
+        raise NotImplementedError
 
 
 class Field2D(Field):
@@ -168,8 +164,17 @@ class Field2D(Field):
 
         return field
 
-    def gradient(self):
+    def gradient(self, z_jumps=None, y_jumps=None):
         """Compute the gradient of this Field2D.
+
+        Parameters
+        ----------
+        z_jumps : list of float
+            List of z coordinates of discontinuities parallel to the y-axis.
+            The one-sided derivative will be taken at these points.
+        y_jumps : list of float
+            List of y coordinates of discontinuities parallel to the z-axis.
+            The one-sided derivative will be taken at these points.
 
         Returns
         -------
@@ -178,18 +183,69 @@ class Field2D(Field):
             corresponding to the derivatives of self.field along the z and y
             axes, respectively.
         """
-        return np.gradient(self.field, self.gridsize, axis=(1, 2))
+        if z_jumps is None:
+            z_jumps = []
+        if y_jumps is None:
+            y_jumps = []
 
-    def energy_density(self):
-        """Compute the energy density of this field due to its gradient.
+        gradient = np.gradient(self.field, self.gridsize, axis=(1, 2))
+
+        # Compute the one-sided derivative for discontinuities
+        f = self.field
+        h = self.gridsize
+        for z in z_jumps:
+            i = int(round((z - self.zmin) / self.gridsize))
+            gradient[0][:, i - 1, :] = (f[:, i - 1, :] - f[:, i - 2, :]) / h
+            gradient[0][:, i, :] = (f[:, i + 1, :] - f[:, i, :]) / h
+        for y in y_jumps:
+            i = int(round((y - self.ymin) / self.gridsize))
+            gradient[1][:, :, i - 1] = (f[:, :, i - 1] - f[:, :, i - 2]) / h
+            gradient[1][:, :, i] = (f[:, :, i + 1] - f[:, :, i]) / h
+
+        return gradient
+
+    def energy_density(self, z_jumps=None, y_jumps=None):
+        """Compute the energy density of this Field2D due to its gradient.
+
+        Parameters
+        ----------
+        z_jumps : list of float
+            List of z coordinates of discontinuities parallel to the y-axis.
+            The one-sided derivative will be taken at these points.
+        y_jumps : list of float
+            List of y coordinates of discontinuities parallel to the z-axis.
+            The one-sided derivative will be taken at these points.
 
         Returns
         -------
         energy_density : ndarray
             The energy density at each point. Has shape (nz, ny).
         """
-        df_dz, df_dy = self.gradient()
+        df_dz, df_dy = self.gradient(z_jumps=z_jumps, y_jumps=y_jumps)
         return np.sum(np.abs(df_dz)**2 + np.abs(df_dy)**2, axis=0)
+
+    def energy(self, z_jumps=None, y_jumps=None):
+        """Compute the energy of this Field2D due to its gradient.
+
+        Parameters
+        ----------
+        z_jumps : list of float
+            List of z coordinates of discontinuities parallel to the y-axis.
+            The one-sided derivative will be taken at these points.
+        y_jumps : list of float
+            List of y coordinates of discontinuities parallel to the z-axis.
+            The one-sided derivative will be taken at these points.
+
+        Returns
+        -------
+        energy : float
+            The total energy.
+        """
+        # Compute the energy density and repeatedly integrate over all axes
+        energy = self.energy_density(z_jumps=z_jumps, y_jumps=y_jumps)
+        while energy.ndim > 0:
+            energy = np.trapz(energy, dx=self.gridsize)
+        return energy
 
 
 class Field1D(Field):
@@ -265,8 +321,14 @@ class Field1D(Field):
 
         return field
 
-    def gradient(self):
+    def gradient(self, z_jumps=None):
         """Compute the derivative of this Field1D.
+
+        Parameters
+        ----------
+        z_jumps : list of float
+            List of z coordinates of discontinuities. The one-sided derivative
+            will be taken at these points.
 
         Returns
         -------
@@ -274,15 +336,53 @@ class Field1D(Field):
             An ndarray with the same shape as self.field corresponding to the
             derivative at each point.
         """
-        return np.gradient(self.field, self.gridsize, axis=1)
+        if z_jumps is None:
+            z_jumps = []
 
-    def energy_density(self):
-        """Compute the energy density of this field due to its gradient.
+        gradient = np.gradient(self.field, self.gridsize, axis=1)
+
+        # Compute the one-sided derivative for discontinuities
+        f = self.field
+        h = self.gridsize
+        for z in z_jumps:
+            i = int(round((z - self.zmin) / self.gridsize))
+            gradient[:, i - 1] = (f[:, i - 1] - f[:, i - 2]) / h
+            gradient[:, i] = (f[:, i + 1] - f[:, i]) / h
+
+        return gradient
+
+    def energy_density(self, z_jumps=None):
+        """Compute the energy density of this Field1D due to its gradient.
+
+        Parameters
+        ----------
+        z_jumps : list of float
+            List of z coordinates of discontinuities. The one-sided derivative
+            will be taken at these points.
 
         Returns
         -------
         energy_density : ndarray
             The energy density at each point. Has shape (nz,).
         """
-        df_dz = self.gradient()
+        df_dz = self.gradient(z_jumps=z_jumps)
         return np.sum(np.abs(df_dz)**2, axis=0)
+
+    def energy(self, z_jumps=None):
+        """Compute the energy of this Field1D due to its gradient.
+
+        Parameters
+        ----------
+        z_jumps : list of float
+            List of z coordinates of discontinuities. The one-sided derivative
+            will be taken at these points.
+
+        Returns
+        -------
+        energy : float
+            The total energy.
+        """
+        # Compute the energy density and repeatedly integrate over all axes
+        energy = self.energy_density(z_jumps=z_jumps)
+        energy = np.trapz(energy, dx=self.gridsize)
+        return energy
