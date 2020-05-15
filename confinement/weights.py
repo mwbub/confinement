@@ -31,10 +31,10 @@ def get_fundamental_weights(N):
 
     Returns
     -------
-    omega : ndarray
+    w : ndarray
         Array of shape (N-1, N-1) containing the fundamental weights.
     """
-    return np.stack([_omega(b, N) for b in range(1, N)])
+    return np.stack([_w(b, N) for b in range(1, N)])
 
 
 def get_weyl_vector(N):
@@ -90,7 +90,7 @@ def _nu(b, N):
     return np.array([_lambda(a, b) for a in range(1, N)])
 
 
-def _omega(b, N):
+def _w(b, N):
     """The bth fundamental weight of SU(N)."""
     return sum([_nu(a, N) for a in range(1, b + 1)])
 
