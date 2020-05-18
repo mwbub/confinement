@@ -116,6 +116,10 @@ class Field2D(Field):
         self.nz = int((zmax - zmin) / gridsize) + 1
         self.ny = int((ymax - ymin) / gridsize) + 1
 
+        # Arrays of grid points for each axis
+        self.z = np.linspace(zmin, zmin + gridsize * (self.nz - 1), self.nz)
+        self.y = np.linspace(ymin, ymin + gridsize * (self.ny - 1), self.ny)
+
         # Array of shape (n, nz, ny) representing the field
         self.field = np.zeros((self.n, self.nz, self.ny), dtype=complex)
 
@@ -272,8 +276,9 @@ class Field1D(Field):
         self.zmin = zmin
         self.zmax = zmax
 
-        # Number of grid points
+        # Number of grid points and array of points
         self.nz = int((zmax - zmin) / gridsize) + 1
+        self.z = np.linspace(zmin, zmin + gridsize * (self.nz - 1), self.nz)
 
         # Array of shape (n, nz) representing the field
         self.field = np.zeros((self.n, self.nz), dtype=complex)
