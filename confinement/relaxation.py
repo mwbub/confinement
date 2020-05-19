@@ -67,7 +67,7 @@ class RelaxationSolver:
         """
         raise NotImplementedError
 
-    def solve(self, method='gauss', tol=1e-4, maxiter=1000, omega=1.,
+    def solve(self, method='gauss', tol=1e-9, maxiter=10000, omega=1.,
               verbose=False):
         """Solve the PDE.
 
@@ -77,8 +77,8 @@ class RelaxationSolver:
             Method of solving. Either 'jacobi' for the Jacobi method or 'gauss'
             for the Gauss-Seidel method.
         tol : float
-            Error tolerance. The solver will consider the solution to have
-            converged once this threshold is reached.
+            Relative error tolerance. The solver will consider the solution to
+            have converged once this threshold is reached.
         maxiter : int
             Maximum number of iterations until halting.
         omega : float
@@ -94,8 +94,8 @@ class RelaxationSolver:
             Number of iterations until the solution converged or maxiter was
             reached.
         error : float
-            The error, defined as max(|f_new - f_old|) / max(|f_new|), of the
-            final iteration.
+            The relative error, defined as max(|f_new - f_old|) / max(|f_new|),
+            of the final iteration.
         """
         if method == 'jacobi':
             update = self.update_jacobi
