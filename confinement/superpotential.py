@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.integrate import simps
 from .weights import get_simple_roots
 
 
@@ -110,10 +111,8 @@ class Superpotential:
             The total potential energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        energy = self.energy_density(field)
-        while energy.ndim > 0:
-            energy = np.trapz(energy, dx=field.gridsize)
-        return energy
+        density = self.energy_density(field)
+        return _integrate_energy_density(density, field)
 
     def total_energy_density(self, field, **kwargs):
         """Compute the total energy of a field under this Superpotential.
@@ -153,10 +152,8 @@ class Superpotential:
             The total energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        energy = self.total_energy_density(field, **kwargs)
-        while energy.ndim > 0:
-            energy = np.trapz(energy, dx=field.gridsize)
-        return energy
+        density = self.total_energy_density(field, **kwargs)
+        return _integrate_energy_density(density, field)
 
     def eom(self, field):
         """Compute the field equation of motion term due to this Superpotential.
@@ -346,3 +343,27 @@ def _dot_roots_with_field1d(alpha, field):
     """
     product = alpha[:, :, np.newaxis] * field[np.newaxis, :, :]
     return np.sum(product, axis=1)
+
+
+def _integrate_energy_density(density, field):
+    """Integrate an energy density over a grid.
+
+    Parameters
+    ----------
+    density : ndarray
+        An array giving the energy density at each point.
+    field : Field
+        The Field which defines the grid. The grid should have the same shape
+        as the density array.
+
+    Returns
+    -------
+    energy : float
+        The integrated energy.
+    """
+    if density.ndim == 2:
+        return simps(simps(density, x=field.y), x=field.z)
+    elif density.ndim == 1:
+        return simps(density, x=field.z)
+    else:
+        raise ValueError("field has incorrect shape")

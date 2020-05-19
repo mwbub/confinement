@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.integrate import simps
 
 
 class Field:
@@ -246,10 +247,8 @@ class Field2D(Field):
             The total energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        energy = self.energy_density(z_jumps=z_jumps, y_jumps=y_jumps)
-        while energy.ndim > 0:
-            energy = np.trapz(energy, dx=self.gridsize)
-        return energy
+        density = self.energy_density(z_jumps=z_jumps, y_jumps=y_jumps)
+        return simps(simps(density, x=self.y), x=self.z)
 
 
 class Field1D(Field):
@@ -387,7 +386,6 @@ class Field1D(Field):
         energy : float
             The total energy.
         """
-        # Compute the energy density and repeatedly integrate over all axes
-        energy = self.energy_density(z_jumps=z_jumps)
-        energy = np.trapz(energy, dx=self.gridsize)
-        return energy
+        # Compute the energy density and integrate
+        density = self.energy_density(z_jumps=z_jumps)
+        return simps(density, x=self.z)
