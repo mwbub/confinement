@@ -104,7 +104,7 @@ class Meson:
             point. Has the same shape as field.field.
         """
         field_val = self.charge * 2j * np.pi / field.gridsize ** 2
-        y_index = int(round(-field.zmin / field.gridsize))
+        y_index = int(round(-field.ymin / field.gridsize))
 
         laplacian = np.zeros_like(field.field)
         for i in range(field.nz):
