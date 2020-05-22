@@ -26,47 +26,6 @@ class RelaxationSolver:
         self.field = field
         self.func = func
 
-    def _update_jacobi(self, omega):
-        """Update the field using the Jacobi method of relaxation.
-
-        This method converges slower than the Gauss-Seidel method, but can be
-        implemented using vectorized array operations, which may speed up
-        the computations.
-
-        Parameters
-        ----------
-        omega : float
-            The relaxation factor, used for solving with successive
-            over-relaxation or under-relaxation.
-
-        Returns
-        -------
-        error : float
-            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
-        """
-        raise NotImplementedError
-
-    def _update_gauss(self, omega):
-        """Update the field using the Gauss-Seidel method of relaxation.
-
-        This method converges faster than the Jacobi method, but is implemented
-        with explict loops rather than vectorized array operations, which may
-        slow down the computations. The speed of the loops are enhanced using
-        the numba just-in-time compiler.
-
-        Parameters
-        ----------
-        omega : float
-            The relaxation factor, used for solving with successive
-            over-relaxation or under-relaxation.
-
-        Returns
-        -------
-        error : float
-            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
-        """
-        raise NotImplementedError
-
     def solve(self, method='gauss', tol=1e-9, maxiter=10000, omega=1.,
               verbose=False):
         """Solve the PDE.
@@ -118,6 +77,47 @@ class RelaxationSolver:
             print()
 
         return i + 1, error
+
+    def _update_jacobi(self, omega):
+        """Update the field using the Jacobi method of relaxation.
+
+        This method converges slower than the Gauss-Seidel method, but can be
+        implemented using vectorized array operations, which may speed up
+        the computations.
+
+        Parameters
+        ----------
+        omega : float
+            The relaxation factor, used for solving with successive
+            over-relaxation or under-relaxation.
+
+        Returns
+        -------
+        error : float
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
+        """
+        raise NotImplementedError
+
+    def _update_gauss(self, omega):
+        """Update the field using the Gauss-Seidel method of relaxation.
+
+        This method converges faster than the Jacobi method, but is implemented
+        with explict loops rather than vectorized array operations, which may
+        slow down the computations. The speed of the loops are enhanced using
+        the numba just-in-time compiler.
+
+        Parameters
+        ----------
+        omega : float
+            The relaxation factor, used for solving with successive
+            over-relaxation or under-relaxation.
+
+        Returns
+        -------
+        error : float
+            The current error, defined as max(|f_new - f_old|) / max(|f_new|).
+        """
+        raise NotImplementedError
 
 
 class RelaxationSolver2D(RelaxationSolver):
