@@ -26,7 +26,7 @@ class RelaxationSolver:
         self.field = field
         self.func = func
 
-    def update_jacobi(self, omega):
+    def _update_jacobi(self, omega):
         """Update the field using the Jacobi method of relaxation.
 
         This method converges slower than the Gauss-Seidel method, but can be
@@ -46,7 +46,7 @@ class RelaxationSolver:
         """
         raise NotImplementedError
 
-    def update_gauss(self, omega):
+    def _update_gauss(self, omega):
         """Update the field using the Gauss-Seidel method of relaxation.
 
         This method converges faster than the Jacobi method, but is implemented
@@ -98,9 +98,9 @@ class RelaxationSolver:
             of the final iteration.
         """
         if method == 'jacobi':
-            update = self.update_jacobi
+            update = self._update_jacobi
         elif method == 'gauss':
-            update = self.update_gauss
+            update = self._update_gauss
         else:
             raise ValueError("method must be 'jacobi' or 'gauss'")
 
@@ -144,7 +144,7 @@ class RelaxationSolver2D(RelaxationSolver):
         """
         super().__init__(field, func)
 
-    def update_jacobi(self, omega):
+    def _update_jacobi(self, omega):
         """Update the field using the Jacobi method of relaxation.
 
         This method converges slower than the Gauss-Seidel method, but can be
@@ -181,7 +181,7 @@ class RelaxationSolver2D(RelaxationSolver):
 
         return error
 
-    def update_gauss(self, omega):
+    def _update_gauss(self, omega):
         """Update the field using the Gauss-Seidel method of relaxation.
 
         This method converges faster than the Jacobi method, but is implemented
@@ -264,7 +264,7 @@ class RelaxationSolver1D(RelaxationSolver):
         """
         super().__init__(field, func)
 
-    def update_jacobi(self, omega):
+    def _update_jacobi(self, omega):
         """Update the field using the Jacobi method of relaxation.
 
         This method converges slower than the Gauss-Seidel method, but can be
@@ -299,7 +299,7 @@ class RelaxationSolver1D(RelaxationSolver):
 
         return error
 
-    def update_gauss(self, omega):
+    def _update_gauss(self, omega):
         """Update the field using the Gauss-Seidel method of relaxation.
 
         This method converges faster than the Jacobi method, but is implemented
