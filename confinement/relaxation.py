@@ -245,7 +245,6 @@ class RelaxationSolver2D(RelaxationSolver):
 
         # Compute the error
         error = np.max(np.abs(delta)) / np.max(np.abs(f))
-
         return error
 
     def _update_gauss(self, omega):
@@ -267,17 +266,16 @@ class RelaxationSolver2D(RelaxationSolver):
         error : float
             The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
-        # Store the field, grid size, and Laplacian in temporary variables
-        f = self.field.field
-        h = self.field.gridsize
-        laplacian = self.func(self.field)
-        f_old = np.copy(f)
+        # Copy the field to compute the error later
+        f_old = np.copy(self.field.field)
 
         # Update the field using compiled code
-        _update_gauss2d(f, h, laplacian, omega)
+        _update_gauss2d(self.field.field, self.field.gridsize,
+                        self.func(self.field), omega)
 
         # Compute the error
-        error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
+        delta = self.field.field - f_old
+        error = np.max(np.abs(delta)) / np.max(np.abs(self.field.field))
         return error
 
     def _symmetric_gauss(self, field, omega):
@@ -297,16 +295,15 @@ class RelaxationSolver2D(RelaxationSolver):
         error : float
             The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
-        f = field.field
-        h = field.gridsize
-        laplacian = self.func(field)
-        f_old = np.copy(f)
+        # Copy the field to compute the error later
+        f_old = np.copy(field.field)
 
         # Update the field using compiled code
-        _symmetric_gauss2d(f, h, laplacian, omega)
+        _symmetric_gauss2d(field.field, field.gridsize, self.func(field), omega)
 
         # Compute the error
-        error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
+        delta = field.field - f_old
+        error = np.max(np.abs(delta)) / np.max(np.abs(field.field))
         return error
 
 
@@ -392,7 +389,6 @@ class RelaxationSolver1D(RelaxationSolver):
 
         # Compute the error
         error = np.max(np.abs(delta)) / np.max(np.abs(f))
-
         return error
 
     def _update_gauss(self, omega):
@@ -414,17 +410,16 @@ class RelaxationSolver1D(RelaxationSolver):
         error : float
             The current error, defined as max(|f_new - f_old|) / max(|f_new|).
         """
-        # Store the field, grid size, and 2nd derivative in temporary variables
-        f = self.field.field
-        h = self.field.gridsize
-        deriv = self.func(self.field)
-        f_old = np.copy(f)
+        # Copy the field to compute the error later
+        f_old = np.copy(self.field.field)
 
         # Update the field using compiled code
-        _update_gauss1d(f, h, deriv, omega)
+        _update_gauss1d(self.field.field, self.field.gridsize,
+                        self.func(self.field), omega)
 
         # Compute the error
-        error = np.max(np.abs(f - f_old)) / np.max(np.abs(f))
+        delta = self.field.field - f_old
+        error = np.max(np.abs(delta)) / np.max(np.abs(self.field.field))
         return error
 
 
