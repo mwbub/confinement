@@ -78,22 +78,8 @@ class RelaxationSolver:
         else:
             raise ValueError("method must be 'jacobi' or 'gauss'")
 
-        # Update until the error is small or the max iteration count is reached
-        i = 0
-        error = np.inf
-        for i in range(maxiter):
-            error = update(omega)
-            if verbose:
-                outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
-                print("\r" + _ERASESTR + "\r" + outstr, end="\r")
-            if error < tol:
-                break
-
-        # Print a newline before returning if using verbose mode
-        if verbose:
-            print()
-
-        return i + 1, error
+        # Solve the PDE
+        return _solve(tol, maxiter, verbose, update, omega)
 
     def _update_jacobi(self, omega):
         """Update the field using the Jacobi method of relaxation.
@@ -203,20 +189,9 @@ class RelaxationSolver2D(RelaxationSolver):
                              self.field.gridsize)
         left_field.field[:] = self.field.field[:, :centre_index + 1]
 
-        # Update until the error is small or the max iteration count is reached
-        i = 0
-        error = np.inf
-        for i in range(maxiter):
-            error = self._symmetric_gauss(left_field, omega)
-            if verbose:
-                outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
-                print("\r" + _ERASESTR + "\r" + outstr, end="\r")
-            if error < tol:
-                break
-
-        # Print a newline before returning if using verbose mode
-        if verbose:
-            print()
+        # Solve the PDE
+        iterations, error = _solve(tol, maxiter, verbose, self._symmetric_gauss,
+                                   left_field, omega)
 
         # Copy and reflect the left half of the field into the original field
         self.field.field[:, :centre_index + 1] = left_field.field
@@ -225,7 +200,7 @@ class RelaxationSolver2D(RelaxationSolver):
         else:
             self.field.field[:, centre_index + 1:] = left_field.field[:, -2::-1]
 
-        return i + 1, error
+        return iterations, error
 
     def _update_jacobi(self, omega):
         """Update the field using the Jacobi method of relaxation.
@@ -461,6 +436,52 @@ class PoissonSolver1D(RelaxationSolver1D):
         super().__init__(field, None, constant=deriv)
 
 
+def _solve(tol, maxiter, verbose, update, *args):
+    """Solve a PDE by the relaxation method.
+
+    Parameters
+    ----------
+    tol : float
+        Relative error tolerance.
+    maxiter : int
+        Maximum number of iterations.
+    verbose : bool
+        If True, print the iteration number and current error after each
+        iteration.
+    update : callable
+        The update function used to relax the solution. This should return a
+        float giving the current relative error.
+    *args
+        Arguments to pass to update.
+
+    Returns
+    -------
+    iterations : int
+        Number of iterations until the solution converged or maxiter was
+        reached.
+    error : float
+        The relative error, defined as max(|f_new - f_old|) / max(|f_new|),
+        of the final iteration.
+    """
+    i = 0
+    error = np.inf
+
+    # Update until the error is small or the max iteration count is reached
+    for i in range(maxiter):
+        error = update(*args)
+        if verbose:
+            outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
+            print("\r" + _ERASESTR + "\r" + outstr, end="\r")
+        if error < tol:
+            break
+
+    # Print a newline before returning if using verbose mode
+    if verbose:
+        print()
+
+    return i + 1, error
+
+
 @jit(nopython=True)
 def _update_gauss2d(f, h, laplacian, omega):
     """Update a 2D field using the Gauss-Seidel method.
@@ -487,31 +508,6 @@ def _update_gauss2d(f, h, laplacian, omega):
                         - h**2 * laplacian[:, i, j])
             delta = residual * omega / 4
             f[:, i, j] += delta
-
-
-@jit(nopython=True)
-def _update_gauss1d(f, h, deriv, omega):
-    """Update a 1D field using the Gauss-Seidel method.
-
-    Parameters
-    ----------
-    f : ndarray
-        The field. Has shape (n, nz), where n is the number of components.
-    h : float
-        The gridsize.
-    deriv : ndarray
-        Array of the second derivative at each point. Has the same shape as f.
-    omega : float
-        The relaxation parameter.
-
-    Returns
-    -------
-    None
-    """
-    for i in range(1, f.shape[1] - 1):
-        residual = f[:, i - 1] + f[:, i + 1] - 2 * f[:, i] - h**2 * deriv[:, i]
-        delta = residual * omega / 2
-        f[:, i] += delta
 
 
 @jit(nopython=True)
@@ -550,3 +546,28 @@ def _symmetric_gauss2d(f, h, laplacian, omega):
                         - 4 * f[:, -1, j] - h**2 * laplacian[:, -1, j])
             delta = residual * omega / 4
             f[:, -1, j] += delta
+
+
+@jit(nopython=True)
+def _update_gauss1d(f, h, deriv, omega):
+    """Update a 1D field using the Gauss-Seidel method.
+
+    Parameters
+    ----------
+    f : ndarray
+        The field. Has shape (n, nz), where n is the number of components.
+    h : float
+        The gridsize.
+    deriv : ndarray
+        Array of the second derivative at each point. Has the same shape as f.
+    omega : float
+        The relaxation parameter.
+
+    Returns
+    -------
+    None
+    """
+    for i in range(1, f.shape[1] - 1):
+        residual = f[:, i - 1] + f[:, i + 1] - 2 * f[:, i] - h**2 * deriv[:, i]
+        delta = residual * omega / 2
+        f[:, i] += delta
