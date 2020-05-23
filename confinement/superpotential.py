@@ -37,6 +37,19 @@ class Superpotential:
             shape (N-1, nz, ny), then W has shape (nz, ny). If field.field has
             shape (N-1, nz), then W has shape (nz,). If field is an ndarray,
             with shape (N-1,), then W is a scalar.
+
+        Notes
+        -----
+        The superpotential `W` evaluated on a vector field
+        :math:`\\boldsymbol{x}` is given by
+
+        .. math::
+            W(\\boldsymbol{x}) = \\sum_{a = 1}^{N} e^{\\boldsymbol{\\alpha}_a
+            \\cdot \\boldsymbol{x}}
+
+        where :math:`\\boldsymbol{\\alpha}_a`, :math:`a = 1, \\ldots, N - 1` are
+        the simple roots of SU(`N`), and :math:`\\boldsymbol{\\alpha}_N` is the
+        affine root.
         """
         if isinstance(field, np.ndarray):
             dot_products = np.sum(self.alpha * field[np.newaxis, :], axis=1)
@@ -169,6 +182,14 @@ class Superpotential:
         laplacian : ndarray
             Array giving the value of the Laplacian due to this Superpotential
             at each point. Has the same shape as field.field.
+
+        Notes
+        -----
+        The potential term in the equation of motion is given by
+
+        .. math::
+            \\frac{1}{4} \\frac{\\partial}{\\partial (\\boldsymbol{x}^*)}
+            \\left| \\frac{dW}{d \\boldsymbol{x}} \\right|^2.
         """
         # Compute the dot products of the field with the roots
         dot_products = _dot_roots_with_field2d(self.alpha, field.field)
@@ -203,6 +224,21 @@ class Superpotential:
         df : ndarray
             Array giving the value of the derivative of the field under the BPS
             equation at each point. Has the same shape as field.field.
+
+        Notes
+        -----
+        The BPS equation is given by
+
+        .. math::
+            \\frac{d \\boldsymbol{x}}{dz} = \\frac{\\alpha}{2}
+            \\frac{dW^*}{d \\boldsymbol{x}^*}
+
+        where
+
+        .. math::
+            \\alpha =
+            \\frac{W(\\boldsymbol{x}(\\infty)) - W(\\boldsymbol{x}(-\\infty))}
+            {|W(\\boldsymbol{x}(\\infty)) - W(\\boldsymbol{x}(-\\infty))|}.
         """
         # Values of the Superpotential at +/- infinity
         left_val, right_val = self(field)[[0, -1]]
@@ -226,6 +262,15 @@ class Superpotential:
         deriv : ndarray
             Array giving the value of the second derivative of the field under
             the BPS equation at each point. Has the same shape as field.field.
+
+        Notes
+        -----
+        The second-order BPS equation is given by
+
+        .. math::
+            \\frac{d^2 x_i}{dz^2} = \\frac{1}{4} \\sum_{j = 1}^{N - 1}
+            \\frac{\\partial W}{\\partial x_j}
+            \\frac{\\partial^2 W^*}{\\partial x_j^* \\partial x_i^*}.
         """
         # Compute the dot products of the field with the roots
         dot_products = _dot_roots_with_field1d(self.alpha, field.field)
