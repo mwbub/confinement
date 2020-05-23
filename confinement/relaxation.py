@@ -315,7 +315,7 @@ class RelaxationSolver2D(RelaxationSolver):
         f_old = np.copy(field.field)
 
         # Update the field using compiled code
-        laplacian = self.func(field) + self.constant
+        laplacian = self.func(field) + self.constant[:, :field.nz]
         _symmetric_gauss2d(field.field, field.gridsize, laplacian, omega)
 
         # Compute the error
