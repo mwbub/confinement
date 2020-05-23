@@ -38,7 +38,7 @@ class RelaxationSolver:
         if constant is not None:
             self.constant = np.array(constant)
         else:
-            self.constant = 0
+            self.constant = np.zeros_like(field.field)
 
     def solve(self, method='gauss', tol=1e-9, maxiter=10000, omega=1.,
               verbose=False):
