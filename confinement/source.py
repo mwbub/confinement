@@ -58,7 +58,7 @@ class Source:
 
         laplacian = np.zeros_like(field.field)
         for i in range(field.ny):
-            y = (field.ymin + i * field.gridsize) * self.monodromy
+            y = field.y[i] * self.monodromy
             if y >= y0:
                 laplacian[:, z_index - 1, i] = field_val
                 laplacian[:, z_index, i] = -field_val
@@ -108,7 +108,7 @@ class Meson:
 
         laplacian = np.zeros_like(field.field)
         for i in range(field.nz):
-            z = field.zmin + i * field.gridsize
+            z = field.z[i]
             if self.z1 <= z <= self.z2:
                 laplacian[:, i, y_index - 1] = -field_val
                 laplacian[:, i, y_index] = field_val
