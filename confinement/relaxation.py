@@ -32,8 +32,7 @@ class RelaxationSolver:
         if func is not None:
             self.func = func
         else:
-            zeros = np.zeros_like(field.field)
-            self.func = lambda f: zeros
+            self.func = lambda f: np.zeros_like(f.field)
 
         if constant is not None:
             self.constant = np.array(constant)
