@@ -1,5 +1,5 @@
 import numpy as np
-from numba import jit
+from numba import njit
 from .field import Field2D
 _ERASESTR = "                                                                  "
 
@@ -481,7 +481,7 @@ def _solve(tol, maxiter, verbose, update, *args):
     return i + 1, error
 
 
-@jit(nopython=True)
+@njit
 def _update_gauss2d(f, h, laplacian, omega):
     """Update a 2D field using the Gauss-Seidel method.
 
@@ -509,7 +509,7 @@ def _update_gauss2d(f, h, laplacian, omega):
             f[:, i, j] += delta
 
 
-@jit(nopython=True)
+@njit
 def _symmetric_gauss2d(f, h, laplacian, omega):
     """Update a mirror-symmetric 2D field using Gauss-Seidel relaxation.
 
@@ -547,7 +547,7 @@ def _symmetric_gauss2d(f, h, laplacian, omega):
             f[:, -1, j] += delta
 
 
-@jit(nopython=True)
+@njit
 def _update_gauss1d(f, h, deriv, omega):
     """Update a 1D field using the Gauss-Seidel method.
 
