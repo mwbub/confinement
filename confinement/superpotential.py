@@ -169,7 +169,7 @@ class Superpotential:
         return _integrate_energy_density(density, field)
 
     def eom(self, field):
-        r"""Compute the field equation of motion term due to this Superpotential.
+        r"""Compute the equation of motion term due to this Superpotential.
 
         Parameters
         ----------
