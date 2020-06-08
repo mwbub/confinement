@@ -21,7 +21,7 @@ class Superpotential:
         self.alpha = get_simple_roots(N)
 
     def __call__(self, field):
-        """Evaluate this Superpotential on a field.
+        r"""Evaluate this Superpotential on a field.
 
         Parameters
         ----------
@@ -41,14 +41,14 @@ class Superpotential:
         Notes
         -----
         The superpotential `W` evaluated on a vector field
-        :math:`\\boldsymbol{x}` is given by
+        :math:`\boldsymbol{x}` is given by
 
         .. math::
-            W(\\boldsymbol{x}) = \\sum_{a = 1}^{N} e^{\\boldsymbol{\\alpha}_a
-            \\cdot \\boldsymbol{x}}
+            W(\boldsymbol{x}) = \sum_{a = 1}^{N} e^{\boldsymbol{\alpha}_a
+            \cdot \boldsymbol{x}}
 
-        where :math:`\\boldsymbol{\\alpha}_a`, :math:`a = 1, \\ldots, N - 1` are
-        the simple roots of SU(`N`), and :math:`\\boldsymbol{\\alpha}_N` is the
+        where :math:`\boldsymbol{\alpha}_a`, :math:`a = 1, \ldots, N - 1` are
+        the simple roots of SU(`N`), and :math:`\boldsymbol{\alpha}_N` is the
         affine root.
         """
         if isinstance(field, np.ndarray):
@@ -169,7 +169,7 @@ class Superpotential:
         return _integrate_energy_density(density, field)
 
     def eom(self, field):
-        """Compute the field equation of motion term due to this Superpotential.
+        r"""Compute the field equation of motion term due to this Superpotential.
 
         Parameters
         ----------
@@ -188,8 +188,8 @@ class Superpotential:
         The potential term in the equation of motion is given by
 
         .. math::
-            \\frac{1}{4} \\frac{\\partial}{\\partial (\\boldsymbol{x}^*)}
-            \\left| \\frac{dW}{d \\boldsymbol{x}} \\right|^2.
+            \frac{1}{4} \frac{\partial}{\partial (\boldsymbol{x}^*)}
+            \left| \frac{dW}{d \boldsymbol{x}} \right|^2.
         """
         # Compute the dot products of the field with the roots
         dot_products = _dot_roots_with_field2d(self.alpha, field.field)
@@ -210,7 +210,7 @@ class Superpotential:
         return np.sum(summand, axis=0) / 4
 
     def bps(self, field):
-        """Compute the first derivative of a field from the BPS equation.
+        r"""Compute the first derivative of a field from the BPS equation.
 
         Parameters
         ----------
@@ -230,15 +230,15 @@ class Superpotential:
         The BPS equation is given by
 
         .. math::
-            \\frac{d \\boldsymbol{x}}{dz} = \\frac{\\alpha}{2}
-            \\frac{dW^*}{d \\boldsymbol{x}^*}
+            \frac{d \boldsymbol{x}}{dz} = \frac{\alpha}{2}
+            \frac{dW^*}{d \boldsymbol{x}^*}
 
         where
 
         .. math::
-            \\alpha =
-            \\frac{W(\\boldsymbol{x}(\\infty)) - W(\\boldsymbol{x}(-\\infty))}
-            {|W(\\boldsymbol{x}(\\infty)) - W(\\boldsymbol{x}(-\\infty))|}.
+            \alpha =
+            \frac{W(\boldsymbol{x}(\infty)) - W(\boldsymbol{x}(-\infty))}
+            {|W(\boldsymbol{x}(\infty)) - W(\boldsymbol{x}(-\infty))|}.
         """
         # Values of the Superpotential at +/- infinity
         left_val, right_val = self(field)[[0, -1]]
@@ -249,7 +249,7 @@ class Superpotential:
         return np.conj(gradient) * factor / 2
 
     def bps_eom(self, field):
-        """Compute the second-order BPS equation of motion for a 1D field.
+        r"""Compute the second-order BPS equation of motion for a 1D field.
 
         Parameters
         ----------
@@ -268,9 +268,9 @@ class Superpotential:
         The second-order BPS equation is given by
 
         .. math::
-            \\frac{d^2 x_i}{dz^2} = \\frac{1}{4} \\sum_{j = 1}^{N - 1}
-            \\frac{\\partial W}{\\partial x_j}
-            \\frac{\\partial^2 W^*}{\\partial x_j^* \\partial x_i^*}.
+            \frac{d^2 x_i}{dz^2} = \frac{1}{4} \sum_{j = 1}^{N - 1}
+            \frac{\partial W}{\partial x_j}
+            \frac{\partial^2 W^*}{\partial x_j^* \partial x_i^*}.
         """
         # Compute the dot products of the field with the roots
         dot_products = _dot_roots_with_field1d(self.alpha, field.field)
@@ -296,7 +296,7 @@ class Superpotential:
         return sum3 / 4
 
     def bps_energy(self, vacuum1, vacuum2):
-        """Compute the energy of a BPS soliton interpolating between two vacua.
+        r"""Compute the energy of a BPS soliton interpolating between two vacua.
 
         Parameters
         ----------
@@ -312,12 +312,12 @@ class Superpotential:
 
         Notes
         -----
-        The BPS soliton energy is given by :math:`|W(\\infty) - W(-\\infty)|`.
+        The BPS soliton energy is given by :math:`|W(\infty) - W(-\infty)|`.
         """
         return np.abs(self(vacuum2) - self(vacuum1))
 
     def bps_energy_exact(self, k):
-        """Compute the energy of a BPS k-wall interpolating between two vacua.
+        r"""Compute the energy of a BPS k-wall interpolating between two vacua.
 
         Parameters
         ----------
@@ -335,8 +335,8 @@ class Superpotential:
         uses the exact expression for the BPS k-wall energy given by
 
         .. math::
-            E_\\mathrm{BPS}^{k\\mathrm{-wall}} =
-            N \\sqrt{2 ( 1 - \\cos( 2 \\pi k / N ) )}.
+            E_\mathrm{BPS}^{k\mathrm{-wall}} =
+            N \sqrt{2 ( 1 - \cos( 2 \pi k / N ) )}.
         """
         return self.N * (2 * (1 - np.cos(2 * np.pi * k / self.N)))**0.5
 
