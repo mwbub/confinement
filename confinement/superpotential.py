@@ -309,8 +309,36 @@ class Superpotential:
         -------
         bps_energy : float
             The energy of a BPS soliton interpolating between the two vacua.
+
+        Notes
+        -----
+        The BPS soliton energy is given by :math:`|W(\\infty) - W(-\\infty)|`.
         """
         return np.abs(self(vacuum2) - self(vacuum1))
+
+    def bps_energy_exact(self, k):
+        """Compute the energy of a BPS k-wall interpolating between two vacua.
+
+        Parameters
+        ----------
+        k : int
+            The number of units separating the vacua.
+
+        Returns
+        -------
+        bps_energy : float
+            The energy of a BPS soliton interpolating between the two vacua.
+
+        Notes
+        -----
+        This method serves the same purpose as Superpotential.bps_energy(), but
+        uses the exact expression for the BPS k-wall energy given by
+
+        .. math::
+            E_\\mathrm{BPS}^{k\\mathrm{-wall}} =
+            N \\sqrt{2 ( 1 - \\cos( 2 \\pi k / N ) )}.
+        """
+        return self.N * (2 * (1 - np.cos(2 * np.pi * k / self.N)))**0.5
 
     def _eom_naive(self, field):
         """Naive implementation of eom, used for testing purposes.
