@@ -87,6 +87,37 @@ class Field2D(Field):
     """
     A class used to represent a discretized complex-valued vector field in two
     spatial dimensions.
+
+    Attributes
+    ----------
+    n : int
+        Number of field components.
+    nz : int
+        Number of grid points along the z-axis.
+    ny : int
+        Number of grid points along the y-axis.
+    field : ndarray
+        Value of the field at each point. Has shape (n, nz, ny).
+    z : ndarray
+        Array of grid points along the z-axis.
+    y : ndarray
+        Array of grid points along the y-axis.
+    zmin : float
+        Lower bound of the z-axis.
+    zmax : float
+        Upper bound of the z-axis.
+    ymin : float
+        Lower bound of the y-axis.
+    ymax : float
+        Upper bound of the y-axis.
+    gridsize : float
+        Grid division size.
+
+    Notes
+    -----
+    Depending on the grid size, the attributes `zmax` and `ymax` are not
+    necessarily equivalent to the largest values in the `z` and `y` arrays,
+    respectively. Instead, they are merely upper bounds.
     """
 
     def __init__(self, n, zmin, zmax, ymin, ymax, gridsize):
@@ -255,6 +286,29 @@ class Field1D(Field):
     """
     A class used to represent a discretized complex-valued vector field in one
     spatial dimension.
+
+    Attributes
+    ----------
+    n : int
+        Number of field components.
+    nz : int
+        Number of grid points along the z-axis.
+    field : ndarray
+        Value of the field at each point. Has shape (n, nz).
+    z : ndarray
+        Array of grid points along the z-axis.
+    zmin : float
+        Lower bound of the z-axis.
+    zmax : float
+        Upper bound of the z-axis.
+    gridsize : float
+        Grid division size.
+
+    Notes
+    -----
+    Depending on the grid size, the attribute `zmax` is not necessarily
+    equivalent to the largest value in the `z` array. Instead, it is merely an
+    upper bound.
     """
 
     def __init__(self, n, zmin, zmax, gridsize):
