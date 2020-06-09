@@ -312,7 +312,8 @@ class Superpotential:
 
         Notes
         -----
-        The BPS soliton energy is given by :math:`|W(\infty) - W(-\infty)|`.
+        The BPS soliton energy is given by
+        :math:`|W(\boldsymbol{x}(\infty)) - W(\boldsymbol{x}(-\infty))|`.
         """
         return np.abs(self(vacuum2) - self(vacuum1))
 
