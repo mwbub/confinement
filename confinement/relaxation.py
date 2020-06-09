@@ -30,14 +30,14 @@ class RelaxationSolver:
         self.field = field
 
         if func is not None:
-            self.func = func
+            self._func = func
         else:
-            self.func = lambda f: np.zeros_like(f.field)
+            self._func = lambda f: np.zeros_like(f.field)
 
         if constant is not None:
-            self.constant = np.array(constant)
+            self._constant = np.array(constant)
         else:
-            self.constant = np.zeros_like(field.field)
+            self._constant = np.zeros_like(field.field)
 
     def solve(self, method='gauss', tol=1e-9, maxiter=10000, omega=1.,
               verbose=False):
@@ -127,6 +127,12 @@ class RelaxationSolver2D(RelaxationSolver):
     A class used to solve a general discretized 2D second-order PDE of the form
     Dz^2 u + Dy^2 u = f(u, z, y), where u is a complex-valued vector field,
     using the relaxation method.
+    
+    Attributes
+    ----------
+    field : Field2D
+        The vector field which defines the grid and boundary conditions, and 
+        where the solution will ultimately be stored.
     """
 
     def __init__(self, field, func, constant=None):
@@ -222,7 +228,7 @@ class RelaxationSolver2D(RelaxationSolver):
         # Store the field, grid size, and Laplacian in temporary variables
         f = self.field.field
         h = self.field.gridsize
-        laplacian = self.func(self.field) + self.constant
+        laplacian = self._func(self.field) + self._constant
 
         # Compute the new values of the field using vectorized operations
         residual = (f[:, :-2, 1:-1] + f[:, 2:, 1:-1] + f[:, 1:-1, :-2]
@@ -260,7 +266,7 @@ class RelaxationSolver2D(RelaxationSolver):
         f_old = np.copy(self.field.field)
 
         # Update the field using compiled code
-        laplacian = self.func(self.field) + self.constant
+        laplacian = self._func(self.field) + self._constant
         _update_gauss2d(self.field.field, self.field.gridsize, laplacian, omega)
 
         # Compute the error
@@ -289,7 +295,7 @@ class RelaxationSolver2D(RelaxationSolver):
         f_old = np.copy(field.field)
 
         # Update the field using compiled code
-        laplacian = self.func(field) + self.constant[:, :field.nz]
+        laplacian = self._func(field) + self._constant[:, :field.nz]
         _symmetric_gauss2d(field.field, field.gridsize, laplacian, omega)
 
         # Compute the error
@@ -302,6 +308,12 @@ class PoissonSolver2D(RelaxationSolver2D):
     """
     A class used to solve a discretized 2D Poisson problem for a complex-valued
     vector field, using the relaxation method.
+
+    Attributes
+    ----------
+    field : Field2D
+        The vector field which defines the grid and boundary conditions, and
+        where the solution will ultimately be stored.
     """
 
     def __init__(self, field, laplacian):
@@ -325,6 +337,12 @@ class RelaxationSolver1D(RelaxationSolver):
     A class used to solve a general discretized 1D second-order PDE of the form
     Dy^2 u = f(u, y), where u is a complex-valued vector field in one variable,
     using the relaxation method.
+
+    Attributes
+    ----------
+    field : Field1D
+        The vector field which defines the grid and boundary conditions, and
+        where the solution will ultimately be stored.
     """
 
     def __init__(self, field, func, constant=None):
@@ -368,7 +386,7 @@ class RelaxationSolver1D(RelaxationSolver):
         # Store the field, grid size, and 2nd derivative in temporary variables
         f = self.field.field
         h = self.field.gridsize
-        deriv = self.func(self.field) + self.constant
+        deriv = self._func(self.field) + self._constant
 
         # Compute the new values of the field using vectorized operations
         residual = f[:, :-2] + f[:, 2:] - h**2 * deriv[:, 1:-1] - 2 * f[:, 1:-1]
@@ -404,7 +422,7 @@ class RelaxationSolver1D(RelaxationSolver):
         f_old = np.copy(self.field.field)
 
         # Update the field using compiled code
-        deriv = self.func(self.field) + self.constant
+        deriv = self._func(self.field) + self._constant
         _update_gauss1d(self.field.field, self.field.gridsize, deriv, omega)
 
         # Compute the error
@@ -417,6 +435,12 @@ class PoissonSolver1D(RelaxationSolver1D):
     """
     A class used to solve a discretized 1D Poisson problem for a complex-valued
     vector field, using the relaxation method.
+
+    Attributes
+    ----------
+    field : Field1D
+        The vector field which defines the grid and boundary conditions, and
+        where the solution will ultimately be stored.
     """
 
     def __init__(self, field, deriv):
