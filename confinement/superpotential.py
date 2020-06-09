@@ -7,6 +7,11 @@ class Superpotential:
     """
     A class representing the superpotential for a super Yang-Mills theory
     compactified on R^3 x S^1 in the small circle limit.
+    
+    Attributes
+    ----------
+    N : int
+        The degree of SU(N)
     """
 
     def __init__(self, N):
@@ -18,7 +23,7 @@ class Superpotential:
             The degree of SU(N).
         """
         self.N = N
-        self.alpha = get_simple_roots(N)
+        self._alpha = get_simple_roots(N)
 
     def __call__(self, field):
         r"""Evaluate this Superpotential on a field.
@@ -52,11 +57,11 @@ class Superpotential:
         affine root.
         """
         if isinstance(field, np.ndarray):
-            dot_products = np.sum(self.alpha * field[np.newaxis, :], axis=1)
+            dot_products = np.sum(self._alpha * field[np.newaxis, :], axis=1)
         elif field.field.ndim == 3:
-            dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+            dot_products = _dot_roots_with_field2d(self._alpha, field.field)
         elif field.field.ndim == 2:
-            dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+            dot_products = _dot_roots_with_field1d(self._alpha, field.field)
         else:
             raise ValueError("field has incorrect shape")
 
@@ -78,13 +83,13 @@ class Superpotential:
             shape as field.field.
         """
         if field.field.ndim == 3:
-            dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+            dot_products = _dot_roots_with_field2d(self._alpha, field.field)
             exp = np.exp(dot_products)[:, np.newaxis, :, :]
-            summand = exp * self.alpha[:, :, np.newaxis, np.newaxis]
+            summand = exp * self._alpha[:, :, np.newaxis, np.newaxis]
         elif field.field.ndim == 2:
-            dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+            dot_products = _dot_roots_with_field1d(self._alpha, field.field)
             exp = np.exp(dot_products)[:, np.newaxis, :]
-            summand = exp * self.alpha[:, :, np.newaxis]
+            summand = exp * self._alpha[:, :, np.newaxis]
         else:
             raise ValueError("field has incorrect shape")
 
@@ -192,7 +197,7 @@ class Superpotential:
             \left| \frac{dW}{d \boldsymbol{x}} \right|^2.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+        dot_products = _dot_roots_with_field2d(self._alpha, field.field)
 
         # Exponentiate the dot products and add an axis for vectorized math
         exp = np.exp(dot_products)[:, np.newaxis, :, :]
@@ -203,7 +208,7 @@ class Superpotential:
         exp_shifted_down = np.roll(exp, 1, axis=0)
 
         # Compute the summands using vectorized operations
-        summand = (self.alpha[:, :, np.newaxis, np.newaxis] * exp_conj
+        summand = (self._alpha[:, :, np.newaxis, np.newaxis] * exp_conj
                    * (2 * exp - exp_shifted_up - exp_shifted_down))
 
         # Return the potential term of the Laplacian
@@ -273,20 +278,20 @@ class Superpotential:
             \frac{\partial^2 W^*}{\partial x_j^* \partial x_i^*}.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field1d(self.alpha, field.field)
+        dot_products = _dot_roots_with_field1d(self._alpha, field.field)
 
         # Exponentiate the dot products and compute the conjugate
         exp = np.exp(dot_products)
         exp_conj = np.conj(exp)
 
         # Compute the first inner sum
-        sum1 = exp[:, np.newaxis, :] * self.alpha[:, :, np.newaxis]
+        sum1 = exp[:, np.newaxis, :] * self._alpha[:, :, np.newaxis]
         sum1 = np.sum(sum1, axis=0)
 
         # Compute the second inner sum
         sum2 = (exp_conj[:, np.newaxis, np.newaxis, :]
-                * self.alpha[:, :, np.newaxis, np.newaxis]
-                * self.alpha[:, np.newaxis, :, np.newaxis])
+                * self._alpha[:, :, np.newaxis, np.newaxis]
+                * self._alpha[:, np.newaxis, :, np.newaxis])
         sum2 = np.sum(sum2, axis=0)
 
         # Compute the outer sum
@@ -357,7 +362,7 @@ class Superpotential:
             at each point. Has the same shape as field.field.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field2d(self.alpha, field.field)
+        dot_products = _dot_roots_with_field2d(self._alpha, field.field)
 
         # Exponentiate the dot products and add an axis for vectorized math
         exp = np.exp(dot_products)[:, np.newaxis, :, :]
@@ -367,8 +372,8 @@ class Superpotential:
         laplacian = np.zeros_like(field.field)
         for a in range(self.N):
             for b in range(self.N):
-                laplacian += (self.alpha[b][:, np.newaxis, np.newaxis]
-                              * np.dot(self.alpha[a], self.alpha[b])
+                laplacian += (self._alpha[b][:, np.newaxis, np.newaxis]
+                              * np.dot(self._alpha[a], self._alpha[b])
                               * exp[a] * exp_conj[b])
 
         # Return the potential term of the Laplacian
