@@ -56,6 +56,10 @@ class Superpotential:
         the simple roots of SU(`N`), and :math:`\boldsymbol{\alpha}_N` is the
         affine root.
         """
+        # If a scalar is passed, assume all field components equal that scalar
+        if np.isscalar(field):
+            field = np.array([field] * (self.N - 1))
+
         if isinstance(field, np.ndarray):
             dot_products = np.sum(self._alpha * field[np.newaxis, :], axis=1)
         elif field.field.ndim == 3:
