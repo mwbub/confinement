@@ -15,10 +15,10 @@ def get_weights(N):
     Returns
     -------
     nu : ndarray
-        Array of shape (N-1, N-1) containing the weights of the fundamental
+        Array of shape (N-1, N) containing the weights of the fundamental
         representation.
     """
-    return np.stack([_nu(b, N) for b in range(1, N)])
+    return np.stack([_nu(b, N) for b in range(1, N + 1)])
 
 
 def get_fundamental_weights(N):
@@ -64,10 +64,10 @@ def get_simple_roots(N):
     Returns
     -------
     alpha : ndarray
-        Array of shape (N, N-1) contianing the simple roots. alpha[0] is the
-        affine root, and alpha[a] for a > 0 are the simple roots.
+        Array of shape (N, N-1) contianing the simple roots. alpha[N-1] is the
+        affine root, and alpha[a] for a < N-1 are the simple roots.
     """
-    return np.stack([_affine_root(N)] + [_alpha(b, N) for b in range(1, N)])
+    return np.stack([_alpha(b, N) for b in range(1, N)] + [_affine_root(N)])
 
 
 def _delta(i, j):
