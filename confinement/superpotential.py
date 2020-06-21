@@ -60,15 +60,10 @@ class Superpotential:
         if np.isscalar(field):
             field = np.array([field] * (self.N - 1))
 
-        if isinstance(field, np.ndarray):
-            dot_products = np.sum(self._alpha * field[np.newaxis, :], axis=1)
-        elif field.field.ndim == 3:
-            dot_products = _dot_roots_with_field2d(self._alpha, field.field)
-        elif field.field.ndim == 2:
-            dot_products = _dot_roots_with_field1d(self._alpha, field.field)
-        else:
-            raise ValueError("field has incorrect shape")
+        if not isinstance(field, np.ndarray):
+            field = field.field
 
+        dot_products = np.tensordot(self._alpha, field, axes=(1, 0))
         return np.sum(np.exp(dot_products), axis=0)
 
     def gradient(self, field):
@@ -86,18 +81,8 @@ class Superpotential:
             The gradient of this Superpotential at each point. Has the same
             shape as field.field.
         """
-        if field.field.ndim == 3:
-            dot_products = _dot_roots_with_field2d(self._alpha, field.field)
-            exp = np.exp(dot_products)[:, np.newaxis, :, :]
-            summand = exp * self._alpha[:, :, np.newaxis, np.newaxis]
-        elif field.field.ndim == 2:
-            dot_products = _dot_roots_with_field1d(self._alpha, field.field)
-            exp = np.exp(dot_products)[:, np.newaxis, :]
-            summand = exp * self._alpha[:, :, np.newaxis]
-        else:
-            raise ValueError("field has incorrect shape")
-
-        return np.sum(summand, axis=0)
+        dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
+        return np.tensordot(self._alpha, np.exp(dot_products), axes=(0, 0))
 
     def energy_density(self, field):
         """Compute the energy density of a field under this Superpotential.
@@ -201,22 +186,18 @@ class Superpotential:
             \left| \frac{dW}{d \boldsymbol{x}} \right|^2.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field2d(self._alpha, field.field)
+        dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
 
-        # Exponentiate the dot products and add an axis for vectorized math
-        exp = np.exp(dot_products)[:, np.newaxis, :, :]
-
-        # Compute the conjugate and shifted exponential arrays
-        exp_conj = np.conj(exp)
+        # Exponentiate the dot products and compute the shifted arrays
+        exp = np.exp(dot_products)
         exp_shifted_up = np.roll(exp, -1, axis=0)
         exp_shifted_down = np.roll(exp, 1, axis=0)
 
-        # Compute the summands using vectorized operations
-        summand = (self._alpha[:, :, np.newaxis, np.newaxis] * exp_conj
-                   * (2 * exp - exp_shifted_up - exp_shifted_down))
+        # Factor which multiplies the roots
+        factor = np.conj(exp) * (2 * exp - exp_shifted_up - exp_shifted_down)
 
         # Return the potential term of the Laplacian
-        return np.sum(summand, axis=0) / 4
+        return np.tensordot(self._alpha, factor, axes=(0, 0)) / 4
 
     def bps(self, field):
         r"""Compute the first derivative of a field from the BPS equation.
@@ -281,28 +262,20 @@ class Superpotential:
             \frac{\partial W}{\partial x_j}
             \frac{\partial^2 W^*}{\partial x_j^* \partial x_i^*}.
         """
-        # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field1d(self._alpha, field.field)
-
-        # Exponentiate the dot products and compute the conjugate
+        # Compute the dot products of the field with the roots and exponentiate
+        dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
         exp = np.exp(dot_products)
-        exp_conj = np.conj(exp)
 
-        # Compute the first inner sum
-        sum1 = exp[:, np.newaxis, :] * self._alpha[:, :, np.newaxis]
-        sum1 = np.sum(sum1, axis=0)
+        # Compute the first inner sum using Einstein summation
+        sum1 = np.einsum('ij,ik', self._alpha, exp)
 
         # Compute the second inner sum
-        sum2 = (exp_conj[:, np.newaxis, np.newaxis, :]
-                * self._alpha[:, :, np.newaxis, np.newaxis]
-                * self._alpha[:, np.newaxis, :, np.newaxis])
-        sum2 = np.sum(sum2, axis=0)
+        sum2 = np.tensordot(self._alpha[:, :, np.newaxis]
+                            * self._alpha[:, np.newaxis, :],
+                            np.conj(exp), axes=(0, 0))
 
-        # Compute the outer sum
-        sum3 = sum1[:, np.newaxis, :] * sum2
-        sum3 = np.sum(sum3, axis=0)
-
-        return sum3 / 4
+        # Compute the outer sum using Einstein summation
+        return np.einsum('ijk,jk->ik', sum2, sum1) / 4
 
     def bps_energy(self, vacuum1, vacuum2):
         r"""Compute the energy of a BPS soliton interpolating between two vacua.
@@ -366,7 +339,8 @@ class Superpotential:
             at each point. Has the same shape as field.field.
         """
         # Compute the dot products of the field with the roots
-        dot_products = _dot_roots_with_field2d(self._alpha, field.field)
+        dot_products = np.sum(self._alpha[:, :, np.newaxis, np.newaxis]
+                              * field.field[np.newaxis, :, :, :], axis=1)
 
         # Exponentiate the dot products and add an axis for vectorized math
         exp = np.exp(dot_products)[:, np.newaxis, :, :]
@@ -382,50 +356,6 @@ class Superpotential:
 
         # Return the potential term of the Laplacian
         return laplacian / 4
-
-
-def _dot_roots_with_field2d(alpha, field):
-    """Compute the dot product of a 2D field with the simple roots of SU(N).
-
-    Parameters
-    ----------
-    alpha : ndarray
-        Array of shape (N, N-1) giving the simple roots and affine root of
-        SU(N), such as returned by weights.get_simple_roots(N).
-    field : ndarray
-        Array of shape (N-1, nz, ny) representing the field at each point of the
-        grid.
-
-    Returns
-    -------
-    dot_products : ndarray
-        Array of shape (N, nz, ny) giving the dot product at each point of the
-        grid for each root. The first axis represents the roots.
-    """
-    product = alpha[:, :, np.newaxis, np.newaxis] * field[np.newaxis, :, :, :]
-    return np.sum(product, axis=1)
-
-
-def _dot_roots_with_field1d(alpha, field):
-    """Compute the dot product of a 1D field with the simple roots of SU(N).
-
-    Parameters
-    ----------
-    alpha : ndarray
-        Array of shape (N, N-1) giving the simple roots and affine root of
-        SU(N), such as returned by weights.get_simple_roots(N).
-    field : ndarray
-        Array of shape (N-1, nz) representing the field at each point of the
-        grid.
-
-    Returns
-    -------
-    dot_products : ndarray
-        Array of shape (N, nz) giving the dot product at each point of the grid
-        for each root. The first axis represents the roots.
-    """
-    product = alpha[:, :, np.newaxis] * field[np.newaxis, :, :]
-    return np.sum(product, axis=1)
 
 
 def _integrate_energy_density(density, field):
