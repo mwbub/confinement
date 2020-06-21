@@ -266,8 +266,8 @@ class Superpotential:
         dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
         exp = np.exp(dot_products)
 
-        # Compute the first inner sum using Einstein summation
-        sum1 = np.einsum('ij,ik', self._alpha, exp)
+        # Compute the first inner sum
+        sum1 = np.tensordot(self._alpha, exp, axes=(0, 0))
 
         # Compute the second inner sum
         sum2 = np.tensordot(self._alpha[:, :, np.newaxis]
