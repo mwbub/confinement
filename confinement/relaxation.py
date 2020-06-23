@@ -493,8 +493,7 @@ def _solve(tol, maxiter, verbose, update, *args):
         error = update(*args)
         if verbose:
             outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
-            print(" " * 100, end="\r")
-            print(outstr, end="\r")
+            print(" " * 100 + "\r" + outstr, end="\r")
         if error < tol:
             break
 
