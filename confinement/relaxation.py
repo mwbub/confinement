@@ -1,7 +1,6 @@
 import numpy as np
 from numba import njit
 from .field import Field2D
-_ERASESTR = "                                                                  "
 
 
 class RelaxationSolver:
@@ -494,7 +493,8 @@ def _solve(tol, maxiter, verbose, update, *args):
         error = update(*args)
         if verbose:
             outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
-            print("\r" + _ERASESTR + "\r" + outstr, end="\r")
+            print(" " * 100, end="\r")
+            print(outstr, end="\r")
         if error < tol:
             break
 
