@@ -487,13 +487,15 @@ def _solve(tol, maxiter, verbose, update, *args):
     """
     i = 0
     error = np.inf
+    strlen = 0
 
     # Update until the error is small or the max iteration count is reached
     for i in range(maxiter):
         error = update(*args)
         if verbose:
             outstr = "Iteration: {}\tError: {:.3g}".format(i + 1, error)
-            print(" " * 100 + "\r" + outstr, end="\r")
+            print(" " * strlen + "\r" + outstr, end="\r")
+            strlen = len(outstr)
         if error < tol:
             break
 
