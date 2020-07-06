@@ -2,6 +2,7 @@
 Tools for computing the various weights and roots of SU(N).
 """
 import numpy as np
+from scipy.special import digamma
 
 
 def get_weights(N):
@@ -68,6 +69,34 @@ def get_simple_roots(N):
         affine root, and alpha[a] for a < N-1 are the simple roots.
     """
     return np.stack([_alpha(b, N) for b in range(1, N)] + [_affine_root(N)])
+
+
+def kahler_metric(N, epsilon=0.):
+    """Computes the inverse Kahler metric to first order with weak coupling.
+
+    Parameters
+    ----------
+    N : int
+        The degree of SU(N).
+    epsilon : float
+        The expansion parameter, which determines the strength of the leading
+        order quantum correction.
+
+    Returns
+    -------
+    g : ndarray
+        Array of shape (N-1, N-1) giving the inverse Kahler metric as a matrix.
+    """
+    g = np.identity(N - 1)
+    for i in range(1, N):
+        for j in range(1, N):
+            for A in range(1, N + 1):
+                for B in range(A + 1, N + 1):
+                    factor1 = _lambda(i, A) - _lambda(i, B)
+                    factor2 = _lambda(j, A) - _lambda(j, B)
+                    factor3 = digamma((B - A) / N) + digamma(1 - (B - A) / N)
+                    g[i - 1, j - 1] += epsilon * factor1 * factor2 * factor3
+    return g
 
 
 def _delta(i, j):
