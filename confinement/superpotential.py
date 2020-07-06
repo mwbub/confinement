@@ -162,7 +162,7 @@ class Superpotential:
         density = self.total_energy_density(field, **kwargs)
         return _integrate_energy_density(density, field)
 
-    def eom(self, field):
+    def eom(self, field, g=None):
         r"""Compute the equation of motion term due to this Superpotential.
 
         Parameters
@@ -170,6 +170,9 @@ class Superpotential:
         field : Field2D
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
 
         Returns
         -------
@@ -185,19 +188,29 @@ class Superpotential:
             \frac{1}{4} \frac{\partial}{\partial (\boldsymbol{x}^*)}
             \left| \frac{dW}{d \boldsymbol{x}} \right|^2.
         """
-        # Compute the dot products of the field with the roots
+        # Compute the dot products of the field with the roots and exponentiate
         dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
-
-        # Exponentiate the dot products and compute the shifted arrays
         exp = np.exp(dot_products)
-        exp_shifted_up = np.roll(exp, -1, axis=0)
-        exp_shifted_down = np.roll(exp, 1, axis=0)
 
-        # Factor which multiplies the roots
-        factor = np.conj(exp) * (2 * exp - exp_shifted_up - exp_shifted_down)
+        if g is None:
+            # Roll the exponentiated arrays
+            exp_rolled_up = np.roll(exp, -1, axis=0)
+            exp_rolled_down = np.roll(exp, 1, axis=0)
+            factor = np.conj(exp) * (2 * exp - exp_rolled_up - exp_rolled_down)
 
-        # Return the potential term of the Laplacian
-        return np.tensordot(self._alpha, factor, axes=(0, 0)) / 4
+            # Return the potential term of the Laplacian
+            return np.tensordot(self._alpha, factor, axes=(0, 0)) / 4
+        else:
+            # Compute the gradient and Hessian of the conjugate
+            gradient = np.tensordot(self._alpha, exp, axes=(0, 0))
+            hessian_conj = np.tensordot(self._alpha[:, :, np.newaxis]
+                                        * self._alpha[:, np.newaxis, :],
+                                        np.conj(exp), axes=(0, 0))
+
+            # Compute the potential term using Einstein summation
+            ein = np.einsum('lzy,jk,lm,jmzy->kzy', gradient, g, g, hessian_conj,
+                            optimize='greedy')
+            return ein / 4
 
     def bps(self, field):
         r"""Compute the first derivative of a field from the BPS equation.
@@ -267,15 +280,15 @@ class Superpotential:
         exp = np.exp(dot_products)
 
         # Compute the first inner sum
-        sum1 = np.tensordot(self._alpha, exp, axes=(0, 0))
+        gradient = np.tensordot(self._alpha, exp, axes=(0, 0))
 
         # Compute the second inner sum
-        sum2 = np.tensordot(self._alpha[:, :, np.newaxis]
-                            * self._alpha[:, np.newaxis, :],
-                            np.conj(exp), axes=(0, 0))
+        hessian_conj = np.tensordot(self._alpha[:, :, np.newaxis]
+                                    * self._alpha[:, np.newaxis, :],
+                                    np.conj(exp), axes=(0, 0))
 
         # Compute the outer sum using Einstein summation
-        return np.einsum('ijk,jk->ik', sum2, sum1) / 4
+        return np.einsum('ijz,jz->iz', hessian_conj, gradient) / 4
 
     def bps_energy(self, vacuum1, vacuum2):
         r"""Compute the energy of a BPS soliton interpolating between two vacua.
