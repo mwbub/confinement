@@ -208,8 +208,8 @@ class Superpotential:
                                         np.conj(exp), axes=(0, 0))
 
             # Compute the potential term using Einstein summation
-            ein = np.einsum('lzy,jk,lm,jmzy->kzy', gradient, g, g, hessian_conj,
-                            optimize='greedy')
+            ein = np.einsum('l...,jk,lm,jm...->k...', gradient, g, g,
+                            hessian_conj, optimize='greedy')
             return ein / 4
 
     def bps(self, field, g=None):
