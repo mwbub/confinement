@@ -167,7 +167,7 @@ class Superpotential:
 
         Parameters
         ----------
-        field : Field2D
+        field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
         g : ndarray
@@ -256,45 +256,6 @@ class Superpotential:
             return np.conj(gradient) * factor / 2
         else:
             return np.einsum('ij,jz', g, np.conj(gradient)) * factor / 2
-
-    def bps_eom(self, field):
-        r"""Compute the second-order BPS equation of motion for a 1D field.
-
-        Parameters
-        ----------
-        field : Field1D
-            The field on which to evaluate. This vector field must have N-1
-            component scalar fields.
-
-        Returns
-        -------
-        deriv : ndarray
-            Array giving the value of the second derivative of the field under
-            the BPS equation at each point. Has the same shape as field.field.
-
-        Notes
-        -----
-        The second-order BPS equation is given by
-
-        .. math::
-            \frac{d^2 x_i}{dz^2} = \frac{1}{4} \sum_{j = 1}^{N - 1}
-            \frac{\partial W}{\partial x_j}
-            \frac{\partial^2 W^*}{\partial x_j^* \partial x_i^*}.
-        """
-        # Compute the dot products of the field with the roots and exponentiate
-        dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
-        exp = np.exp(dot_products)
-
-        # Compute the first inner sum
-        gradient = np.tensordot(self._alpha, exp, axes=(0, 0))
-
-        # Compute the second inner sum
-        hessian_conj = np.tensordot(self._alpha[:, :, np.newaxis]
-                                    * self._alpha[:, np.newaxis, :],
-                                    np.conj(exp), axes=(0, 0))
-
-        # Compute the outer sum using Einstein summation
-        return np.einsum('ijz,jz->iz', hessian_conj, gradient) / 4
 
     def bps_energy(self, vacuum1, vacuum2):
         r"""Compute the energy of a BPS soliton interpolating between two vacua.
