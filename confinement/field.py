@@ -240,11 +240,14 @@ class Field2D(Field):
 
         return gradient
 
-    def energy_density(self, z_jumps=None, y_jumps=None):
+    def energy_density(self, g=None, z_jumps=None, y_jumps=None):
         """Compute the energy density of this Field2D due to its gradient.
 
         Parameters
         ----------
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
         z_jumps : list of float
             List of z coordinates of discontinuities parallel to the y-axis.
             The one-sided derivative will be taken at these points.
@@ -257,14 +260,23 @@ class Field2D(Field):
         energy_density : ndarray
             The energy density at each point. Has shape (nz, ny).
         """
-        df_dz, df_dy = self.gradient(z_jumps=z_jumps, y_jumps=y_jumps)
-        return np.sum(np.abs(df_dz)**2 + np.abs(df_dy)**2, axis=0)
+        dfdz, dfdy = self.gradient(z_jumps=z_jumps, y_jumps=y_jumps)
+        if g is None:
+            return np.sum(np.abs(dfdz)**2 + np.abs(dfdy)**2, axis=0)
+        else:
+            g_inv = np.linalg.inv(g)
+            sum1 = np.abs(np.einsum('i...,ij,j...', dfdz, g_inv, np.conj(dfdz)))
+            sum2 = np.abs(np.einsum('i...,ij,j...', dfdy, g_inv, np.conj(dfdy)))
+            return sum1 + sum2
 
-    def energy(self, z_jumps=None, y_jumps=None):
+    def energy(self, g=None, z_jumps=None, y_jumps=None):
         """Compute the energy of this Field2D due to its gradient.
 
         Parameters
         ----------
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
         z_jumps : list of float
             List of z coordinates of discontinuities parallel to the y-axis.
             The one-sided derivative will be taken at these points.
@@ -278,7 +290,7 @@ class Field2D(Field):
             The total energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        density = self.energy_density(z_jumps=z_jumps, y_jumps=y_jumps)
+        density = self.energy_density(g=g, z_jumps=z_jumps, y_jumps=y_jumps)
         return simps(simps(density, x=self.y), x=self.z)
 
 
@@ -409,11 +421,14 @@ class Field1D(Field):
 
         return gradient
 
-    def energy_density(self, z_jumps=None):
+    def energy_density(self, g=None, z_jumps=None):
         """Compute the energy density of this Field1D due to its gradient.
 
         Parameters
         ----------
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
         z_jumps : list of float
             List of z coordinates of discontinuities. The one-sided derivative
             will be taken at these points.
@@ -423,14 +438,21 @@ class Field1D(Field):
         energy_density : ndarray
             The energy density at each point. Has shape (nz,).
         """
-        df_dz = self.gradient(z_jumps=z_jumps)
-        return np.sum(np.abs(df_dz)**2, axis=0)
+        dfdz = self.gradient(z_jumps=z_jumps)
+        if g is None:
+            return np.sum(np.abs(dfdz)**2, axis=0)
+        else:
+            g_inv = np.linalg.inv(g)
+            return np.abs(np.einsum('i...,ij,j...', dfdz, g_inv, np.conj(dfdz)))
 
-    def energy(self, z_jumps=None):
+    def energy(self, g=None, z_jumps=None):
         """Compute the energy of this Field1D due to its gradient.
 
         Parameters
         ----------
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
         z_jumps : list of float
             List of z coordinates of discontinuities. The one-sided derivative
             will be taken at these points.
@@ -441,5 +463,5 @@ class Field1D(Field):
             The total energy.
         """
         # Compute the energy density and integrate
-        density = self.energy_density(z_jumps=z_jumps)
+        density = self.energy_density(g=g, z_jumps=z_jumps)
         return simps(density, x=self.z)

@@ -84,7 +84,7 @@ class Superpotential:
         dot_products = np.tensordot(self._alpha, field.field, axes=(1, 0))
         return np.tensordot(self._alpha, np.exp(dot_products), axes=(0, 0))
 
-    def energy_density(self, field):
+    def energy_density(self, field, g=None):
         """Compute the energy density of a field under this Superpotential.
 
         Parameters
@@ -92,6 +92,9 @@ class Superpotential:
         field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
 
         Returns
         -------
@@ -101,9 +104,13 @@ class Superpotential:
             if field.field has shape (N-1, nz), then energy_density has shape
             (nz,).
         """
-        return np.sum(np.abs(self.gradient(field))**2 / 4, axis=0)
+        grad = self.gradient(field)
+        if g is None:
+            return np.sum(np.abs(grad)**2, axis=0) / 4
+        else:
+            return np.abs(np.einsum('i...,ij,j...', grad, g, np.conj(grad))) / 4
 
-    def energy(self, field):
+    def energy(self, field, g=None):
         """Compute the energy of a field under this Superpotential.
 
         Parameters
@@ -111,6 +118,9 @@ class Superpotential:
         field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
 
         Returns
         -------
@@ -118,10 +128,10 @@ class Superpotential:
             The total potential energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        density = self.energy_density(field)
+        density = self.energy_density(field, g=g)
         return _integrate_energy_density(density, field)
 
-    def total_energy_density(self, field, **kwargs):
+    def total_energy_density(self, field, g=None, **kwargs):
         """Compute the total energy of a field under this Superpotential.
 
         Parameters
@@ -129,6 +139,9 @@ class Superpotential:
         field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
         **kwargs
             Keyword arguments to pass to field.energy_density().
 
@@ -140,9 +153,10 @@ class Superpotential:
             if field.field has shape (N-1, nz), then energy_density has shape
             (nz,).
         """
-        return self.energy_density(field) + field.energy_density(**kwargs)
+        return (self.energy_density(field, g=g)
+                + field.energy_density(g=g, **kwargs))
 
-    def total_energy(self, field, **kwargs):
+    def total_energy(self, field, g=None, **kwargs):
         """Compute the total energy of a field under this Superpotential.
 
         Parameters
@@ -150,6 +164,9 @@ class Superpotential:
         field : Field
             The field on which to evaluate. This vector field must have N-1
             component scalar fields.
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
         **kwargs
             Keyword arguments to pass to field.energy_density().
 
@@ -159,7 +176,7 @@ class Superpotential:
             The total energy.
         """
         # Compute the energy density and repeatedly integrate over all axes
-        density = self.total_energy_density(field, **kwargs)
+        density = self.total_energy_density(field, g=g, **kwargs)
         return _integrate_energy_density(density, field)
 
     def eom(self, field, g=None):
