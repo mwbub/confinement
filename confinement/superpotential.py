@@ -212,7 +212,7 @@ class Superpotential:
                             optimize='greedy')
             return ein / 4
 
-    def bps(self, field):
+    def bps(self, field, g=None):
         r"""Compute the first derivative of a field from the BPS equation.
 
         Parameters
@@ -221,6 +221,9 @@ class Superpotential:
             The field on which to evaluate. This vector field must have N-1
             component scalar fields. The leftmost and rightmost values of the
             field are assumed to be the desired boundary values at infinity.
+        g : ndarray
+            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
+            If not provided, then this defaults to the identity.
 
         Returns
         -------
@@ -249,7 +252,10 @@ class Superpotential:
 
         # Compute the gradient and return the BPS derivative
         gradient = self.gradient(field)
-        return np.conj(gradient) * factor / 2
+        if g is None:
+            return np.conj(gradient) * factor / 2
+        else:
+            return np.einsum('ij,jz', g, np.conj(gradient)) * factor / 2
 
     def bps_eom(self, field):
         r"""Compute the second-order BPS equation of motion for a 1D field.
