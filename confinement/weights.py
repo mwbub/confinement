@@ -1,8 +1,10 @@
 """
 Tools for computing the various weights and roots of SU(N).
 """
+import warnings
 import numpy as np
 from scipy.special import digamma
+from . import ConfinementWarning
 
 
 def get_weights(N):
@@ -96,6 +98,12 @@ def kahler_metric(N, epsilon=0.):
                     factor2 = _lambda(j, A) - _lambda(j, B)
                     factor3 = digamma((B - A) / N) + digamma(1 - (B - A) / N)
                     g[i - 1, j - 1] += epsilon * factor1 * factor2 * factor3
+
+    eigenvalues = np.linalg.eigvals(g)
+    if not np.all(eigenvalues > 0):
+        warnings.warn("Kahler metric is not positive-definite",
+                      ConfinementWarning)
+
     return g
 
 
