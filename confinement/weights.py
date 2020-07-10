@@ -89,7 +89,31 @@ def kahler_metric(N, epsilon=0.):
     K : ndarray
         Array of shape (N-1, N-1) giving the inverse Kahler metric as a matrix.
     """
-    K = np.identity(N - 1)
+    K = np.identity(N - 1) + epsilon * _k(N)
+
+    # Check that the matrix is positive-definite
+    eigenvalues = np.linalg.eigvals(K)
+    if not np.all(eigenvalues > 0):
+        warnings.warn("Kahler metric is not positive-definite",
+                      ConfinementWarning)
+
+    return K
+
+
+def _k(N):
+    """Computes the non-unit part of the inverse Kahler metric.
+
+    Parameters
+    ----------
+    N : int
+        The degree of SU(N).
+
+    Returns
+    -------
+    k : ndarray
+        The non-unit part of the inverse Kahler metric.
+    """
+    k = np.zeros((N - 1, N - 1))
     for i in range(1, N):
         for j in range(1, N):
             for A in range(1, N + 1):
@@ -97,14 +121,8 @@ def kahler_metric(N, epsilon=0.):
                     factor1 = _lambda(i, A) - _lambda(i, B)
                     factor2 = _lambda(j, A) - _lambda(j, B)
                     factor3 = digamma((B - A) / N) + digamma(1 - (B - A) / N)
-                    K[i - 1, j - 1] += epsilon * factor1 * factor2 * factor3
-
-    eigenvalues = np.linalg.eigvals(K)
-    if not np.all(eigenvalues > 0):
-        warnings.warn("Kahler metric is not positive-definite",
-                      ConfinementWarning)
-
-    return K
+                    k[i - 1, j - 1] += factor1 * factor2 * factor3
+    return k / N
 
 
 def _delta(i, j):
