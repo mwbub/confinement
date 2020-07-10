@@ -44,7 +44,7 @@ class Source:
         else:
             raise ValueError("monodromy must be either 'above' or 'below'")
 
-    def eom(self, field, g=None):
+    def eom(self, field, K=None):
         """Compute the field equation of motion due to this Source.
 
         Parameters
@@ -52,7 +52,7 @@ class Source:
         field : Field2D
             The field on which to evaluate. For SU(N), this vector field should
             have N-1 component scalar fields.
-        g : ndarray
+        K : ndarray
             Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
             If not provided, then this defaults to the identity.
 
@@ -63,10 +63,10 @@ class Source:
             point. Has the same shape as field.field.
         """
         # Compute the contraction of the charge with the Kahler metric
-        if g is None:
+        if K is None:
             charge_term = self._charge
         else:
-            charge_term = np.einsum('jk,j', g, self._charge)
+            charge_term = np.einsum('jk,j', K, self._charge)
 
         # Compute the value and location of the monodromy
         field_val = charge_term * 2j * np.pi / field.gridsize**2
@@ -113,7 +113,7 @@ class Meson:
         self.z2 = z2
         self._charge = charge
 
-    def eom(self, field, g=None):
+    def eom(self, field, K=None):
         """Compute the field equation of motion due to this Meson.
 
         Parameters
@@ -121,7 +121,7 @@ class Meson:
         field : Field2D
             The field on which to evaluate. For SU(N), this vector field should
             have N-1 component scalar fields.
-        g : ndarray
+        K : ndarray
             Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
             If not provided, then this defaults to the identity.
 
@@ -132,10 +132,10 @@ class Meson:
             point. Has the same shape as field.field.
         """
         # Compute the contraction of the charge with the Kahler metric
-        if g is None:
+        if K is None:
             charge_term = self._charge
         else:
-            charge_term = np.einsum('jk,j', g, self._charge)
+            charge_term = np.einsum('jk,j', K, self._charge)
 
         # Compute the value and location of the monodromy
         field_val = charge_term * 2j * np.pi / field.gridsize ** 2
