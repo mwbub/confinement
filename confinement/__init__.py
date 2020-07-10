@@ -1,0 +1,2 @@
+class ConfinementWarning(Warning):
+    pass
