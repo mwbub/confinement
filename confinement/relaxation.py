@@ -53,7 +53,7 @@ class RelaxationSolver:
         maxiter : int
             Maximum number of iterations until halting.
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
         verbose : bool
             If True, print the iteration number and current error after each
@@ -89,7 +89,7 @@ class RelaxationSolver:
         Parameters
         ----------
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
@@ -110,7 +110,7 @@ class RelaxationSolver:
         Parameters
         ----------
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
@@ -170,7 +170,7 @@ class RelaxationSolver2D(RelaxationSolver):
         maxiter : int
             Maximum number of iterations until halting.
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
         verbose : bool
             If True, print the iteration number and current error after each
@@ -216,7 +216,7 @@ class RelaxationSolver2D(RelaxationSolver):
         Parameters
         ----------
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
@@ -253,7 +253,7 @@ class RelaxationSolver2D(RelaxationSolver):
         Parameters
         ----------
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
@@ -282,7 +282,7 @@ class RelaxationSolver2D(RelaxationSolver):
             The left half of the field to update. Here, field.field should be
             equivalent to self.field.field[:, :(self.field.nz - 1) // 2 + 1].
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
@@ -374,7 +374,7 @@ class RelaxationSolver1D(RelaxationSolver):
         Parameters
         ----------
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
@@ -409,7 +409,7 @@ class RelaxationSolver1D(RelaxationSolver):
         Parameters
         ----------
         omega : float
-            The relaxation factor, used for solving with successive
+            The relaxation parameter, used for solving with successive
             over-relaxation or under-relaxation.
 
         Returns
