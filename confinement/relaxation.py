@@ -458,6 +458,69 @@ class PoissonSolver1D(RelaxationSolver1D):
         super().__init__(field, None, constant=deriv)
 
 
+class Multigrid:
+    """
+    A class used to solve a general discretized 2D second-order PDE of the form
+    Dz^2 u + Dy^2 u = f(u, z, y), where u is a complex-valued vector field,
+    using the full approximation scheme multigrid method.
+
+    Attributes
+    ----------
+    field : Field2D
+        The vector field which defines the grid and boundary conditions, and
+        where the solution will ultimately be stored.
+    """
+
+    def __init__(self, field, func, constant=None):
+        """Initialize this Multigrid.
+
+        Parameters
+        ----------
+        field : Field2D
+            The vector field which defines the grid and where the solution will
+            ultimately be stored. The solver assumes that the boundary
+            conditions for the field have already been set.
+        func : callable(Field)
+            The function which defines the Laplacian of the field. This should
+            take as its argument the field, and return a complex-valued array
+            of the same shape as field.field which gives the Laplacian at each
+            point.
+        constant : array_like
+            A constant term to add to the Laplacian. This should be an array
+            with the same shape as field.field.
+        """
+        self.field = field
+
+        if func is not None:
+            self._func = func
+        else:
+            self._func = lambda f: np.zeros_like(f.field)
+
+        if constant is not None:
+            self._constant = np.array(constant)
+        else:
+            self._constant = np.zeros_like(field.field)
+
+    def _smooth(self, niters, omega):
+        """Smooth the field via a fixed number of Gauss-Seidel iterations.
+
+        Parameters
+        ----------
+        niters : int
+            Number of iterations to run.
+        omega : float
+            The relaxation parameter, used for solving with successive
+            over-relaxation or under-relaxation.
+
+        Returns
+        -------
+        None
+        """
+        solver = RelaxationSolver2D(self.field, self._func,
+                                    constant=self._constant)
+        solver.solve(method='gauss', tol=0, maxiter=niters, omega=omega)
+
+
 def _solve(tol, maxiter, verbose, update, *args):
     """Solve a PDE by the relaxation method.
 
