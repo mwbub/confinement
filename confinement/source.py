@@ -44,7 +44,7 @@ class Source:
         else:
             raise ValueError("monodromy must be either 'above' or 'below'")
 
-    def eom(self, field, K=None):
+    def eom(self, field):
         """Compute the field equation of motion due to this Source.
 
         Parameters
@@ -52,9 +52,6 @@ class Source:
         field : Field2D
             The field on which to evaluate. For SU(N), this vector field should
             have N-1 component scalar fields.
-        K : ndarray
-            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
-            If not provided, then this defaults to the identity.
 
         Returns
         -------
@@ -62,14 +59,8 @@ class Source:
             Array giving the value of the Laplacian due to this Source at each
             point. Has the same shape as field.field.
         """
-        # Compute the contraction of the charge with the Kahler metric
-        if K is None:
-            charge_term = self._charge
-        else:
-            charge_term = np.einsum('jk,j', K, self._charge)
-
         # Compute the value and location of the monodromy
-        field_val = charge_term * 2j * np.pi / field.gridsize**2
+        field_val = self._charge * 2j * np.pi / field.gridsize**2
         z_index = int(round((self.z - field.zmin) / field.gridsize))
         y0 = self.y * self._monodromy
 
@@ -113,7 +104,7 @@ class Meson:
         self.z2 = z2
         self._charge = charge
 
-    def eom(self, field, K=None):
+    def eom(self, field):
         """Compute the field equation of motion due to this Meson.
 
         Parameters
@@ -121,9 +112,6 @@ class Meson:
         field : Field2D
             The field on which to evaluate. For SU(N), this vector field should
             have N-1 component scalar fields.
-        K : ndarray
-            Array of shape (N-1, N-1) giving the inverse of the Kahler metric.
-            If not provided, then this defaults to the identity.
 
         Returns
         -------
@@ -131,14 +119,8 @@ class Meson:
             Array giving the value of the Laplacian due to this Meson at each
             point. Has the same shape as field.field.
         """
-        # Compute the contraction of the charge with the Kahler metric
-        if K is None:
-            charge_term = self._charge
-        else:
-            charge_term = np.einsum('jk,j', K, self._charge)
-
         # Compute the value and location of the monodromy
-        field_val = charge_term * 2j * np.pi / field.gridsize ** 2
+        field_val = self._charge * 2j * np.pi / field.gridsize**2
         y_index = int(round(-field.ymin / field.gridsize))
 
         # Set the monodromy at the appropriate location
